@@ -23,6 +23,6 @@ Licensed under GNU GPLv3
 ### Why the Name?
 I choose the name because it nicely connects a couple of things:
 
-- Mercury is a **messenger** of in roman mythology
-- Mercurial is version control system in **Python**
+- Mercury is a **messenger** in roman mythology
+- Mercurial is a version control system written in **Python**
 - being a scientist, I like the connection to the **chemical element** and **planet**
