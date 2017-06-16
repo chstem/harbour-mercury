@@ -24,11 +24,7 @@ LOCAL_DIR = '.local/share/harbour-mercury/'
 TIMEFORMAT = '%H:%M'
 PROXY = None
 DC_IP = None
-DC_IP = '149.154.167.51'
 TEST = 0
-
-#DC_IP = '149.154.167.40'   # testing
-#DC_IP = '149.154.167.50'   # production
 
 if not os.path.isdir(LOCAL_DIR):
     os.makedirs(LOCAL_DIR)
