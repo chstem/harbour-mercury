@@ -38,6 +38,7 @@ class Client(telethon.TelegramClient):
         print('Initializing interactive example...')
         super().__init__(session_user_id, api_id, api_hash, proxy)
         self.entities = {}
+        self.contacts = {}
 
     ###############
     ###  login  ###
@@ -67,6 +68,16 @@ class Client(telethon.TelegramClient):
     #######################
     ###  requeste data  ###
     #######################
+    
+    def request_contacts(self):
+        self.get_contacts()
+        contacts_model = []
+        for contact, user in self.contacts.values():
+            contactdict = {}
+            contactdict['user_id'] = 'user_{}'.format(user.id)
+            contactdict['name'] = telethon.utils.get_display_name(user)
+            contacts_model.append(contactdict)
+        pyotherside.send('contacts_list', sorted(contacts_model, key=lambda u:u['name']))
 
     def request_dialogs(self):
         dialogs, entities = self.get_dialogs(limit=0)
@@ -130,11 +141,21 @@ class Client(telethon.TelegramClient):
         if entity_type == 'chat':
             entity = self.invoke(telethon.tl.functions.messages.GetChatsRequest([entity_id,])).chats[0]
         elif entity_type == 'user':
-            entity = self.invoke(telethon.tl.functions.users.GetUsersRequest([entity_id,])).users[0]
+            if not self.contacts:
+                self.get_contacts()
+            for contact, user in self.contacts.values():
+                if user.id == entity_id:
+                    return user
+            raise ValueError('Entity user not found {}'.format(entity_id))
         elif entity_type == 'channel':
             raise NotImplementedError
         else:
             raise ValueError('Unkown type {}'.format(entity_type))
+        
+    def get_contacts(self):
+        r = client.invoke(telethon.tl.functions.contacts.GetContactsRequest(client.api_hash))
+        for contact, user in zip(r.contacts, r.users):
+            self.contacts['user_{}'.format(user.id)] = contact, user
         
 client = None
 def connect():

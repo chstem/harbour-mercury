@@ -51,4 +51,5 @@ DISTFILES += \
     qml/pages/PasswordPage.qml \
     qml/pages/DialogsPage.qml \
     qml/pages/DialogPage.qml \
-    qml/Telethon.qml
+    qml/Telethon.qml \
+    qml/pages/ContactsPage.qml

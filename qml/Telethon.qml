@@ -50,6 +50,13 @@ Python {
             }
         })
 
+        setHandler('contacts_list', function(contacts) {
+            contactsModel.clear()
+            for (var i=0; i<contacts.length; i++) {
+                contactsModel.append(contacts[i])
+            }
+        })
+
     }
 
      // set up connection to Telegram

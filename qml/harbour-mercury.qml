@@ -34,6 +34,9 @@ ApplicationWindow
     ListModel {
         id: dialogsModel
     }
+    ListModel {
+        id: contactsModel
+    }
 
     Item {
         id: currentDialog

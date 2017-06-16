@@ -32,6 +32,21 @@
     </message>
 </context>
 <context>
+    <name>ContactsPage</name>
+    <message>
+        <source>Log Out</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show Chats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Contacts</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>DialogsPage</name>
     <message>
         <source>Log Out</source>
@@ -39,6 +54,10 @@
     </message>
     <message>
         <source>Chats</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show Contacts</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

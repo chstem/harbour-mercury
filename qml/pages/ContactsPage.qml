@@ -36,9 +36,9 @@ Page {
                 }
             }
             MenuItem {
-                text: qsTr("Show Contacts")
+                text: qsTr("Show Chats")
                 onClicked: {
-                    pageStack.replace(Qt.resolvedUrl("ContactsPage.qml"))
+                    pageStack.replace(Qt.resolvedUrl("DialogsPage.qml"), {})
                 }
             }
         }
@@ -51,32 +51,32 @@ Page {
 
             width: parent.width
             spacing: Theme.paddingLarge
-            
+
             PageHeader {
                 id: header
-                title: qsTr("Chats")
+                title: qsTr("Contacts")
             }
 
             SilicaListView {
 
-                id: dialogsList
+                id: contactsList
                 height: page.height - header.height - (2*Theme.paddingLarge)
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right
 
-                VerticalScrollDecorator { flickable: dialogsList }
+                VerticalScrollDecorator { flickable: contactsList }
 
-                model: dialogsModel
+                model: contactsModel
 
                 delegate: ListItem {
                     id: delegate
 
-                    contentHeight: dialog.height + Theme.paddingMedium
+                    contentHeight: contact.height + Theme.paddingMedium
                     contentWidth: parent.width
 
                     Row {
-                        id: dialog
+                        id: contact
                         width: parent.width
                         spacing: Theme.paddingMedium
                         x: Theme.paddingLarge
@@ -88,9 +88,7 @@ Page {
                     }
 
                     onClicked: {
-                        currentDialog.entityID = entity_id
-                        currentDialog.title = name
-                        pageStack.push(Qt.resolvedUrl("DialogPage.qml"))
+                        console.log(name)
                     }
                 }
             }
@@ -98,7 +96,7 @@ Page {
     }
 
     Component.onCompleted: {
-        telegram.fcall('request_dialogs', [])
+        telegram.fcall('request_contacts', [])
     }
 }
 
