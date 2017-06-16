@@ -164,6 +164,7 @@ def connect():
     if TEST:
         import Test
         client = Test.TestClient()
+        #raise RuntimeError('Missing API ID/HASH')
         return Test.connect_state
     
     # load apikey
@@ -171,7 +172,7 @@ def connect():
         if not os.path.isfile('apikey.example'):
             with open('apikey.example', 'w') as fd:
                 fd.write('api_id <ID>\napi_hash <HASH>\n')
-        pyotherside.send('log', 'missing_apikey')
+        raise RuntimeError('Missing API ID/HASH')
         return False
     else:
         with open('apikey') as fd:

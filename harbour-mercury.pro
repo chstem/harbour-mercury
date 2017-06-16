@@ -51,5 +51,7 @@ DISTFILES += \
     qml/pages/PasswordPage.qml \
     qml/pages/DialogsPage.qml \
     qml/pages/DialogPage.qml \
-    qml/Telethon.qml \
-    qml/pages/ContactsPage.qml
+    qml/pages/ContactsPage.qml \
+    qml/components/AppNotification.qml \
+    qml/components/AppNotificationItem.qml \
+    qml/Telethon.qml
