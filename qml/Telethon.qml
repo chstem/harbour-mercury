@@ -24,7 +24,8 @@ import io.thp.pyotherside 1.4
 
 Python {
 
-    onError: console.log('Error: ' + traceback)
+    //onError: console.log('Error: ' + traceback)
+    onError: errorNotification.show(traceback);
 
     Component.onCompleted: {
 

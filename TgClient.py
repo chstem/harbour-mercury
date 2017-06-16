@@ -25,7 +25,7 @@ TIMEFORMAT = '%H:%M'
 PROXY = None
 DC_IP = None
 DC_IP = '149.154.167.51'
-TEST = 0
+TEST = 1
 
 #DC_IP = '149.154.167.40'   # testing
 #DC_IP = '149.154.167.50'   # production
@@ -147,6 +147,7 @@ def connect():
     if TEST:
         import Test
         client = Test.TestClient()
+        #raise RuntimeError('Missing API ID/HASH')
         return Test.connect_state
     
     # load apikey
@@ -154,7 +155,7 @@ def connect():
         if not os.path.isfile('apikey.example'):
             with open('apikey.example', 'w') as fd:
                 fd.write('api_id <ID>\napi_hash <HASH>\n')
-        pyotherside.send('log', 'missing_apikey')
+        raise RuntimeError('Missing API ID/HASH')
         return False
     else:
         with open('apikey') as fd:
