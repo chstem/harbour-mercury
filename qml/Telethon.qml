@@ -24,6 +24,8 @@ import io.thp.pyotherside 1.4
 
 Python {
 
+    onError: console.log('Error: ' + traceback)
+
     Component.onCompleted: {
 
         addImportPath(Qt.resolvedUrl('../'))
