@@ -56,6 +56,13 @@ Python {
             pageStack.currentPage.jumpToBottom()
         })
 
+        setHandler('new_message', function(entityID, message) {
+            console.log(entityID)
+            if (currentDialog.entityID === entityID) {
+                dialogModel.append(message)
+            }
+        })
+
         setHandler('contacts_list', function(contacts) {
             contactsModel.clear()
             for (var i=0; i<contacts.length; i++) {

@@ -109,18 +109,49 @@ class Client(telethon.TelegramClient):
             msgdict['time'] = msg.date.strftime(TIMEFORMAT)
             
             if hasattr(msg, 'action'):
-                msgdict['message'] = msg.action
+                msgdict['message'] = str(msg.action)
             elif msg.media:
-                msgdict['message'] = '<media file>'
+                msgdict['message'] = '(media file)'
             elif msg.message:
                 msgdict['message'] = msg.message
             else:
                 # Unknown message, simply print its class name
-                msgdict['message'] = msg.__class__.__name__
+                msgdict['message'] = '(unkown)'
+                msgdict['message'] = str(msg.__class__.__name__)
         
             messages_model.append(msgdict)
             
         pyotherside.send('update_messages', messages_model)
+        
+    ########################
+    ###  update handler  ###
+    ########################
+    
+    def update_handler(self, update_object):
+        
+        pyotherside.send('log', repr(update_object))
+        
+        if isinstance(update_object, telethon.tl.types.UpdatesTg):
+            # Chat
+            for update in update_object.updates:
+                if isinstance(update, telethon.tl.types.UpdateNewMessage):
+                    entity_id = 'User_{}'.format(update.message.from_id)
+                    msgdict = {
+                        'message' : update.message.message,
+                        'name' : telethon.utils.get_display_name(self.get_entity(entity_id)),
+                        'time' : update.message.date.strftime(TIMEFORMAT),
+                    }
+                    pyotherside.send('new_message', entity_id, msgdict)
+                    
+        elif isinstance(update_object, telethon.tl.types.UpdateShortChatMessage):
+            # Group
+            entity_id = 'Chat_{}'.format(update_object.chat_id)
+            msgdict = {
+                'message' : update_object.message,
+                'name' : update_object.from_id,
+                'time' : update_object.message.date.strftime(TIMEFORMAT),
+            }
+            pyotherside.send('new_message', entity_id, msgdict)
     
     ############################
     ###  internal functions  ###
@@ -196,6 +227,8 @@ def connect():
     if not client.is_user_authorized():
         return 'enter_number'
     
+    client.add_update_handler(client.update_handler)
+    
     return True
 
 def call(method, args):
@@ -214,3 +247,4 @@ def get_entity_type(entity):
         if isinstance(entity, getattr(telethon.tl.types, t)):
             return t
     raise ValueError('unkown type: {}'.format(type(entity)))
+        
