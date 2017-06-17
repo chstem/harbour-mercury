@@ -51,6 +51,7 @@ class Client(telethon.TelegramClient):
         self.send_code_request(self.phonenumber)
 
     def send_code(self, code):
+        pyotherside.send('log', '{} {}'.format(type(code), code))
         try:
             success = self.sign_in(phone_number=self.phonenumber, code=code)
         # Two-step verification may be enabled
@@ -85,15 +86,7 @@ class Client(telethon.TelegramClient):
         
         for entity in entities:
             
-            if isinstance(entity, telethon.tl.types.User):
-                entity_type = 'user'
-            elif isinstance(entity, telethon.tl.types.Chat):
-                entity_type = 'chat'
-            elif isinstance(entity, telethon.tl.types.Channel):
-                entity_type = 'channel'
-            else:
-                raise ValueError('unkown type')
-            
+            entity_type = get_entity_type(entity)
             dialogdict = {}
             dialogdict['name'] = telethon.utils.get_display_name(entity)
             dialogdict['entity_id'] = '{}_{}'.format(entity_type, entity.id)
@@ -138,16 +131,16 @@ class Client(telethon.TelegramClient):
             return self.entities[ID]
         
         entity_type, entity_id = ID.split('_')
-        if entity_type == 'chat':
+        if entity_type == 'Chat':
             entity = self.invoke(telethon.tl.functions.messages.GetChatsRequest([entity_id,])).chats[0]
-        elif entity_type == 'user':
+        elif entity_type == 'User':
             if not self.contacts:
                 self.get_contacts()
             for contact, user in self.contacts.values():
                 if user.id == entity_id:
                     return user
             raise ValueError('Entity user not found {}'.format(entity_id))
-        elif entity_type == 'channel':
+        elif entity_type == 'Channel':
             raise NotImplementedError
         else:
             raise ValueError('Unkown type {}'.format(entity_type))
@@ -206,4 +199,17 @@ def connect():
 
 def call(method, args):
     getattr(client, method)(*args)
+
+def get_entity_type(entity):
     
+    types = (
+        'User', 'UserFull',
+        'Channel', 'ChannelForbidden',
+        'Chat', 'ChatEmpty', 'ChatForbidden', 'ChatFull',
+        'InputPeerChannel', 'InputPeerChat', 'InputPeerUser', 'InputPeerEmpty', 'InputPeerSelf',
+    )
+    
+    for t in types:
+        if isinstance(entity, getattr(telethon.tl.types, t)):
+            return t
+    raise ValueError('unkown type: {}'.format(type(entity)))
