@@ -51,7 +51,6 @@ class Client(telethon.TelegramClient):
         self.send_code_request(self.phonenumber)
 
     def send_code(self, code):
-        pyotherside.send('log', '{} {}'.format(type(code), code))
         try:
             success = self.sign_in(phone_number=self.phonenumber, code=code)
         # Two-step verification may be enabled
@@ -66,9 +65,9 @@ class Client(telethon.TelegramClient):
     def send_pass(self, password):
         return self.sign_in(password=password)
 
-    #######################
-    ###  requeste data  ###
-    #######################
+    ######################
+    ###  request data  ###
+    ######################
     
     def request_contacts(self):
         self.get_contacts()
@@ -85,8 +84,10 @@ class Client(telethon.TelegramClient):
         dialogs_model = []
         
         for entity in entities:
-            
             entity_type = get_entity_type(entity)
+            if 'Forbidden' in entity_type:
+                # no access, do not add to dialogs_model
+                continue
             dialogdict = {}
             dialogdict['name'] = telethon.utils.get_display_name(entity)
             dialogdict['entity_id'] = '{}_{}'.format(entity_type, entity.id)
