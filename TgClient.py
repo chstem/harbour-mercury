@@ -135,10 +135,16 @@ class Client(telethon.TelegramClient):
             # Chat
             for update in update_object.updates:
                 if isinstance(update, telethon.tl.types.UpdateNewMessage):
-                    entity_id = 'User_{}'.format(update.message.from_id)
+                    from_id = 'User_{}'.format(update.message.from_id)
+                    to_entity = update.message.to_id
+                    entity_type = get_entity_type(to_entity)
+                    if 'User' in entity_type:
+                        entity_id = 'User_{}'.format(update.message.from_id)
+                    elif 'Chat' in entity_type:
+                        entity_id = 'Chat_{}'.format(update.message.to_id.chat_id)
                     msgdict = {
                         'message' : update.message.message,
-                        'name' : telethon.utils.get_display_name(self.get_entity(entity_id)),
+                        'name' : telethon.utils.get_display_name(self.get_entity(from_id)),
                         'time' : update.message.date.strftime(TIMEFORMAT),
                     }
                     pyotherside.send('new_message', entity_id, msgdict)
@@ -237,10 +243,10 @@ def call(method, args):
 def get_entity_type(entity):
     
     types = (
-        'User', 'UserFull',
-        'Channel', 'ChannelForbidden',
-        'Chat', 'ChatEmpty', 'ChatForbidden', 'ChatFull',
-        'InputPeerChannel', 'InputPeerChat', 'InputPeerUser', 'InputPeerEmpty', 'InputPeerSelf',
+        'User', 'UserFull', 'InputPeerUser', 'PeerUser',
+        'Chat', 'ChatEmpty', 'ChatForbidden', 'ChatFull', 'PeerChat', 'InputPeerChat',
+        'Channel', 'ChannelForbidden', 'InputPeerChannel', 'PeerChannel'
+        'InputPeerEmpty', 'InputPeerSelf',
     )
     
     for t in types:

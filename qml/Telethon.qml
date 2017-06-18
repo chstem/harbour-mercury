@@ -60,6 +60,7 @@ Python {
             console.log(entityID)
             if (currentDialog.entityID === entityID) {
                 dialogModel.append(message)
+                pageStack.currentPage.jumpToBottom()
             }
         })
 
