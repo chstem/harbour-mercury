@@ -59,13 +59,13 @@ Page {
 
             SilicaListView {
 
-                id: contactsList
+                id: contactsView
                 height: page.height - header.height - (2*Theme.paddingLarge)
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right
 
-                VerticalScrollDecorator { flickable: contactsList }
+                VerticalScrollDecorator { flickable: contactsView }
 
                 model: contactsModel
 

@@ -53,6 +53,7 @@ Python {
             for (var i=0; i<messages.length; i++) {
                 dialogModel.append(messages[i])
             }
+            pageStack.currentPage.jumpToBottom()
         })
 
         setHandler('contacts_list', function(contacts) {

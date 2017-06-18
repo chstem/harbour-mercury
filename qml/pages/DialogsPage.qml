@@ -59,13 +59,13 @@ Page {
 
             SilicaListView {
 
-                id: dialogsList
+                id: dialogsView
                 height: page.height - header.height - (2*Theme.paddingLarge)
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right
 
-                VerticalScrollDecorator { flickable: dialogsList }
+                VerticalScrollDecorator { flickable: dialogsView }
 
                 model: dialogsModel
 

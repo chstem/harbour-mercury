@@ -43,13 +43,13 @@ Page {
 
             SilicaListView {
 
-                id: messagesList
+                id: messagesView
                 height: page.height - header.height - (2*Theme.paddingLarge)
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right
 
-                VerticalScrollDecorator { flickable: messagesList }
+                VerticalScrollDecorator { flickable: messagesView }
 
                 model: dialogModel
 
@@ -88,5 +88,10 @@ Page {
     Component.onCompleted: {
         telegram.fcall('request_messages', [currentDialog.entityID])
     }
+
+    function jumpToBottom() {
+        messagesView.positionViewAtEnd()
+    }
+
 }
 
