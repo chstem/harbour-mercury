@@ -105,7 +105,7 @@ class Client(telethon.TelegramClient):
         messages_model = []
         for msg, sender in zip(reversed(messages), reversed(senders)):
             msgdict = {}
-            msgdict['name'] = sender.first_name if sender else '???'
+            msgdict['name'] = telethon.utils.get_display_name(sender)
             msgdict['time'] = msg.date.strftime(TIMEFORMAT)
             
             if hasattr(msg, 'action'):
@@ -129,10 +129,9 @@ class Client(telethon.TelegramClient):
     
     def update_handler(self, update_object):
         
-        pyotherside.send('log', repr(update_object))
-        
         if isinstance(update_object, telethon.tl.types.UpdatesTg):
-            # Chat
+            
+            # check for new chat messages
             for update in update_object.updates:
                 if isinstance(update, telethon.tl.types.UpdateNewMessage):
                     from_id = 'User_{}'.format(update.message.from_id)
@@ -145,6 +144,15 @@ class Client(telethon.TelegramClient):
                     msgdict = {
                         'message' : update.message.message,
                         'name' : telethon.utils.get_display_name(self.get_entity(from_id)),
+                        'time' : update.message.date.strftime(TIMEFORMAT),
+                    }
+                    pyotherside.send('new_message', entity_id, msgdict)
+                
+                if isinstance(update, telethon.tl.types.UpdateNewChannelMessage):
+                    entity_id = 'Channel_{}'.format(update.message.to_id.channel_id)
+                    msgdict = {
+                        'message' : update.message.message,
+                        'name' : telethon.utils.get_display_name(self.get_entity(entity_id)),
                         'time' : update.message.date.strftime(TIMEFORMAT),
                     }
                     pyotherside.send('new_message', entity_id, msgdict)

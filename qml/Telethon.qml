@@ -57,7 +57,6 @@ Python {
         })
 
         setHandler('new_message', function(entityID, message) {
-            console.log(entityID)
             if (currentDialog.entityID === entityID) {
                 dialogModel.append(message)
                 pageStack.currentPage.jumpToBottom()
