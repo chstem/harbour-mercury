@@ -34,8 +34,6 @@ os.chdir(LOCAL_DIR)
 class Client(telethon.TelegramClient):
     
     def __init__(self, session_user_id, api_id, api_hash, proxy=None):
-
-        print('Initializing interactive example...')
         super().__init__(session_user_id, api_id, api_hash, proxy)
         self.entities = {}
         self.contacts = {}
@@ -148,7 +146,7 @@ class Client(telethon.TelegramClient):
                     }
                     pyotherside.send('new_message', entity_id, msgdict)
                 
-                if isinstance(update, telethon.tl.types.UpdateNewChannelMessage):
+                elif isinstance(update, telethon.tl.types.UpdateNewChannelMessage):
                     entity_id = 'Channel_{}'.format(update.message.to_id.channel_id)
                     msgdict = {
                         'message' : update.message.message,
@@ -156,6 +154,11 @@ class Client(telethon.TelegramClient):
                         'time' : update.message.date.strftime(TIMEFORMAT),
                     }
                     pyotherside.send('new_message', entity_id, msgdict)
+                    
+                elif isinstance(update, telethon.tl.types.UpdateReadHistoryOutbox) or \
+                        isinstance(update, telethon.tl.types.UpdateReadHistoryInbox) or \
+                        isinstance(update, telethon.tl.types.UpdateReadChannelInbox):
+                    self.request_dialogs()
                     
         elif isinstance(update_object, telethon.tl.types.UpdateShortChatMessage):
             # Group
