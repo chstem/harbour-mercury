@@ -50,18 +50,24 @@ class Client(telethon.TelegramClient):
 
     def send_code(self, code):
         try:
-            success = self.sign_in(phone_number=self.phonenumber, code=code)
+            status = self.sign_in(phone_number=self.phonenumber, code=code)
         # Two-step verification may be enabled
-        except telethon.errors.RPCError as e:
-            if e.password_required:
-                return 'pass_required'
-            else:
-                raise
-        return success
+        except telethon.errors.SessionPasswordNeededError:
+            return 'pass_required'
+        if not status:
+            return 'invalid'
+        if isinstance(status, telethon.tl.types.User):
+            return True
+        raise ValueError('Unkown return status for sign_in')
 
     # Two-step verification
     def send_pass(self, password):
-        return self.sign_in(password=password)
+        status = self.sign_in(password=password)
+        if not status:
+            return 'invalid'
+        if isinstance(status, telethon.tl.types.User):
+            return True
+        raise ValueError('Unkown return status for sign_in')
 
     ######################
     ###  request data  ###

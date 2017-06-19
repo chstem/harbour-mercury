@@ -75,13 +75,12 @@ Python {
      // set up connection to Telegram
     function connect() {
         call('TgClient.connect', [], function(status) {
-            if (status === 'flood_error') {
-                // TODO: error message
-                console.log('FloodError: too many requests')
-            } else if (status === 'enter_number') {
+            if (status === 'enter_number') {
                 pageStack.replace(Qt.resolvedUrl("pages/ConnectPage.qml"))
             } else if (status === true) {
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
+            } else {
+                errorNotification.show('Unexpected Error')
             }
         });
     }
@@ -92,9 +91,10 @@ Python {
                 pageStack.replace(Qt.resolvedUrl("pages/PasswordPage.qml"))
             } else if (status === true) {
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
+            } else if (status === 'invalid') {
+                errorNotification.show('Invalid login code');
             } else {
-                // TODO: display error message
-                console.log("error validating code")
+                errorNotification.show('Unexpected Error')
             }
         })
     }
@@ -103,9 +103,10 @@ Python {
         call('TgClient.client.send_pass', [password], function(status) {
             if (status === true) {
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
+            } else if (status === 'invalid') {
+                errorNotification.show('Invalid password');
             } else {
-                // TODO: display error message
-                console.log("error validating code")
+
             }
         })
     }
