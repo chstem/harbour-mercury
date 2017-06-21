@@ -19,6 +19,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import "../components"
 
 
 Page {
@@ -42,45 +43,14 @@ Page {
             }
 
             SilicaListView {
-
                 id: messagesView
                 height: page.height - header.height - (2*Theme.paddingLarge)
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right
-
-                VerticalScrollDecorator { flickable: messagesView }
-
                 model: dialogModel
-
-                delegate: ListItem {
-                    id: delegate
-
-                    contentHeight: dialog.height + Theme.paddingMedium
-                    contentWidth: parent.width
-
-                    Column {
-                        id: dialog
-                        width: parent.width - 2*Theme.paddingLarge
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: Theme.paddingMedium
-                        x: Theme.paddingLarge
-
-                        Text {
-                            width: parent.width
-                            color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-                            text: model.name
-                            font.bold: true
-                        }
-                        Text {
-                            width: parent.width
-                            color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-                            text: model.message
-                            wrapMode: Text.Wrap
-                        }
-                    }
-                }
+                delegate: MessageItem {}
+                VerticalScrollDecorator { flickable: messagesView }
             }
         }
     }

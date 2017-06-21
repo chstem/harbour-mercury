@@ -54,4 +54,5 @@ DISTFILES += \
     qml/pages/ContactsPage.qml \
     qml/components/AppNotification.qml \
     qml/components/AppNotificationItem.qml \
-    qml/Telethon.qml
+    qml/Telethon.qml \
+    qml/components/MessageItem.qml
