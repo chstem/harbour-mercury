@@ -26,7 +26,7 @@ Python {
 
     onError: {
         console.log('Error: ' + traceback)
-        errorNotification.show(traceback);
+        errorNotification.show(traceback)
     }
 
     Component.onCompleted: {
@@ -68,6 +68,10 @@ Python {
             for (var i=0; i<contacts.length; i++) {
                 contactsModel.append(contacts[i])
             }
+        })
+
+        setHandler('progress', function(value) {
+            console.log('Progress: ' + parseFloat(value))
         })
 
     }

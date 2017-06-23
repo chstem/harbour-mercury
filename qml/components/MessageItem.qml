@@ -34,16 +34,36 @@ ListItem {
         spacing: Theme.paddingMedium
         x: Theme.paddingLarge
 
+        // Name and Time
         Text {
             width: parent.width
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-            text: model.name
+            text: model.name + " " + new Date(model.time).toLocaleTimeString(Qt.locale(), "HH:mm")
             font.bold: true
+        }
+
+        // Message
+        Text {
+            width: parent.width
+            color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+            visible: model.message.length > 0
+            text: model.message
+            wrapMode: Text.Wrap
+        }
+
+        // Photo +  Caption
+        Image {
+            asynchronous: true
+            width: Math.min(parent.width, sourceSize.width)
+            height: sourceSize.height / sourceSize.width * width
+            visible: model.media === 'photo' ? true : false
+            source: visible ? model.filename : ''
         }
         Text {
             width: parent.width
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-            text: model.message
+            visible: model.media === 'photo' ? true : false
+            text: visible ? model.caption : ''
             wrapMode: Text.Wrap
         }
     }

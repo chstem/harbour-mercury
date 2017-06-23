@@ -16,11 +16,7 @@ CONFIG += sailfishapp
 
 SOURCES += src/harbour-mercury.cpp
 
-OTHER_FILES += qml/harbour-mercury.qml \
-    qml/cover/CoverPage.qml \
-    qml/pages/FirstPage.qml \
-    qml/pages/SecondPage.qml \
-    rpm/harbour-mercury.changes.in \
+OTHER_FILES += rpm/harbour-mercury.changes.in \
     rpm/harbour-mercury.spec \
     rpm/harbour-mercury.yaml \
     translations/*.ts \
@@ -45,6 +41,7 @@ python.files = TgClient.py \
 INSTALLS += python
 
 DISTFILES += \
+    qml/Telethon.qml \
     qml/pages/StartPage.qml \
     qml/pages/ConnectPage.qml \
     qml/pages/CodePage.qml \
@@ -54,5 +51,4 @@ DISTFILES += \
     qml/pages/ContactsPage.qml \
     qml/components/AppNotification.qml \
     qml/components/AppNotificationItem.qml \
-    qml/Telethon.qml \
     qml/components/MessageItem.qml
