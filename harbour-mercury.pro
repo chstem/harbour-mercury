@@ -34,13 +34,13 @@ CONFIG += sailfishapp_i18n
 # modify the localized app name in the the .desktop file.
 TRANSLATIONS += translations/harbour-mercury-de.ts
 
-python.path = /usr/share/harbour-mercury
-python.files = TgClient.py \
-    Test.py
+TgClient.path = /usr/share/harbour-mercury/TgClient
+TgClient.files = TgClient/*
 
-INSTALLS += python
+INSTALLS += TgClient
 
 DISTFILES += \
+    qml/harbour-mercury.qml \
     qml/Telethon.qml \
     qml/pages/StartPage.qml \
     qml/pages/ConnectPage.qml \

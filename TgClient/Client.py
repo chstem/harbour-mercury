@@ -18,27 +18,16 @@
 import os
 import pyotherside
 from telethon import *
+from . import utils
 
-SESSION_ID = 'mercury'
-LOCAL_DIR = '/home/nemo/.local/share/harbour-mercury/'
-FILE_CACHE = os.path.join(LOCAL_DIR, 'files')
-DOWNLOAD_PREFER_SMALL = False       # prefered photo size for download
-TIMEFORMAT = '%H:%M'
-PROXY = None
-DC_IP = None
-TEST = 0
-
-if not os.path.isdir(LOCAL_DIR):
-    os.makedirs(LOCAL_DIR)
-if not os.path.isdir(FILE_CACHE):
-    os.makedirs(FILE_CACHE)
-
-os.chdir(LOCAL_DIR)
+from .FileManager import FileManager
 
 class Client(TelegramClient):
 
-    def __init__(self, session_user_id, api_id, api_hash, proxy=None):
+    def __init__(self, session_user_id, api_id, api_hash, settings, proxy=None):
         super().__init__(session_user_id, api_id, api_hash, proxy)
+        self.settings = settings
+        self.filemanager = FileManager(self, settings)
         self.entities = {}
         self.contacts = {}
 
@@ -92,7 +81,7 @@ class Client(TelegramClient):
         dialogs_model = []
 
         for entity in entities:
-            entity_type = get_entity_type(entity)
+            entity_type = utils.get_entity_type(entity)
             if 'Forbidden' in entity_type:
                 # no access, do not add to dialogs_model
                 continue
@@ -114,119 +103,6 @@ class Client(TelegramClient):
 
         pyotherside.send('update_messages', messages_model)
 
-    ##############################
-    ###  download media files  ###
-    ##############################
-
-    def download_msg_media(self, message):
-        t = get_media_type(message.media)
-        if t == 'photo':
-            return self.download_photo(message)
-        if t == 'document':
-            return self.download_document(message)
-        if t == 'contact':
-            return self.download_contact(message)
-
-    def download_photo(self, message):
-
-        # Determine the photo and its largest size
-        if DOWNLOAD_PREFER_SMALL:
-            size = message.media.photo.sizes[0]
-        else:
-            size = message.media.photo.sizes[-1]
-        file_size = size.size
-
-        filename = message.media.photo.date.strftime('photo_%Y-%m-%d_%H-%M-%S')
-        filename += utils.get_extension(message.media)
-        from_id = message.from_id
-        file_path = os.path.join(FILE_CACHE, str(from_id))
-
-        if not os.path.isdir(file_path):
-            os.makedirs(file_path)
-
-        file_path = os.path.join(file_path, filename)
-
-        if not os.path.isfile(file_path):
-            self.download_file(
-                tl.types.InputFileLocation(
-                    volume_id=size.location.volume_id,
-                    local_id=size.location.local_id,
-                    secret=size.location.secret
-                ),
-                file_path,
-                file_size=file_size,
-                progress_callback=progress_callback
-            )
-
-        return file_path
-
-    def download_document(self, message):
-
-        document = message.media.document
-        file_size = document.size
-
-        for attr in document.attributes:
-            if type(attr) == tl.types.DocumentAttributeFilename:
-                filename = attr.file_name
-                break  # This attribute has higher priority
-            elif type(attr) == tl.types.DocumentAttributeAudio:
-                filename = '{} - {}'.format(attr.performer, attr.title)
-
-        if filename is None:
-            filename = document.date.strftime('doc_%Y-%m-%d_%H-%M-%S')
-        #filename += utils.get_extension(message_media_document)
-
-        from_id = message.from_id
-        file_path = os.path.join(FILE_CACHE, str(from_id))
-
-        if not os.path.isdir(file_path):
-            os.makedirs(file_path)
-
-        file_path = os.path.join(file_path, filename)
-
-        if not os.path.isfile(file_path):
-            self.download_file(
-                tl.types.InputDocumentFileLocation(
-                    id=document.id,
-                    access_hash=document.access_hash,
-                    version=document.version
-                ),
-                file_path,
-                file_size=file_size,
-                progress_callback=progress_callback
-            )
-
-        return file_path
-
-    def download_contact(message):
-        """Downloads a media contact using the vCard 4.0 format"""
-
-        first_name = message.media.first_name
-        last_name = message.media.last_name
-        phone_number = message.media.phone_number
-
-        if last_name and first_name:
-            filename = '{} {}'.format(first_name, last_name)
-        elif first_name:
-            filename = first_name
-        else:
-            filename = last_name
-        filename += '.vcard'
-        file_path = os.path.join(FILE_CACHE, filename)
-
-        if not os.path.isfile(file_path):
-            with open(file_path, 'w', encoding='utf-8') as file:
-                file.write('BEGIN:VCARD\n')
-                file.write('VERSION:4.0\n')
-                file.write('N:{};{};;;\n'.format(first_name, last_name
-                                                if last_name else ''))
-                file.write('FN:{}\n'.format(' '.join((first_name, last_name))))
-                file.write('TEL;TYPE=cell;VALUE=uri:tel:+{}\n'.format(
-                    phone_number))
-                file.write('END:VCARD\n')
-
-        return file_path
-
     ########################
     ###  update handler  ###
     ########################
@@ -240,7 +116,7 @@ class Client(TelegramClient):
                 if isinstance(update, tl.types.UpdateNewMessage):
                     from_id = 'User_{}'.format(update.message.from_id)
                     to_entity = update.message.to_id
-                    entity_type = get_entity_type(to_entity)
+                    entity_type = utils.get_entity_type(to_entity)
                     if 'User' in entity_type:
                         entity_id = 'User_{}'.format(update.message.from_id)
                     elif 'Chat' in entity_type:
@@ -307,86 +183,15 @@ class Client(TelegramClient):
         if hasattr(msg, 'action'):
             msgdict['action'] = str(msg.action)
         if getattr(msg, 'media', None):
-            fname = client.download_msg_media(msg)
-            msgdict['media'] = get_media_type(msg.media)
+            fname = self.filemanager.download_msg_media(msg)
+            msgdict['media'] = utils.get_media_type(msg.media)
             msgdict['filename'] = os.path.abspath(fname)
-            msgdict['caption'] = msg.media.caption
+            if msgdict['filename'] == 'photo':
+                msgdict['caption'] = msg.media.caption
+            if msgdict['filename'] == 'document':
+                msgdict['caption'] = os.path.basename(fname)
 
         return msgdict
-
-client = None
-def connect():
-    global client
-
-    if TEST:
-        import Test
-        client = Test.TestClient()
-        #raise RuntimeError('Missing API ID/HASH')
-        return Test.connect_state
-
-    # load apikey
-    if not os.path.isfile('apikey'):
-        if not os.path.isfile('apikey.example'):
-            with open('apikey.example', 'w') as fd:
-                fd.write('api_id <ID>\napi_hash <HASH>\n')
-        raise RuntimeError('Missing API ID/HASH')
-        return False
-    else:
-        with open('apikey') as fd:
-            tmp = fd.readlines()
-            api_id = int(tmp[0].split()[1])
-            api_hash = tmp[1].split()[1]
-
-    client = Client(
-        SESSION_ID,
-        api_id = api_id,
-        api_hash = api_hash,
-        proxy = PROXY
-    )
-
-    pyotherside.send('log', ''.join(('Telethon Client Version: ', client.__version__)))
-
-    if DC_IP:
-        client.session.server_address = DC_IP
-
-    pyotherside.send('log', 'Connecting to Telegram servers...')
-    if not client.connect():
-        pyotherside.send('log', 'Initial connection failed. Retrying...')
-        if not client.connect():
-            pyotherside.send('log', 'Could not connect to Telegram servers.')
-            return False
-
-    if not client.is_user_authorized():
-        return 'enter_number'
-
-    client.add_update_handler(client.update_handler)
-
-    return True
-
-def get_entity_type(entity):
-
-    types = (
-        'User', 'UserFull', 'InputPeerUser', 'PeerUser',
-        'Chat', 'ChatEmpty', 'ChatForbidden', 'ChatFull', 'PeerChat', 'InputPeerChat',
-        'Channel', 'ChannelForbidden', 'InputPeerChannel', 'PeerChannel'
-        'InputPeerEmpty', 'InputPeerSelf',
-    )
-
-    for t in types:
-        if isinstance(entity, getattr(tl.types, t)):
-            return t
-    raise ValueError('unkown type: {}'.format(type(entity)))
-
-def get_media_type(message_media):
-    if type(message_media) == tl.types.MessageMediaPhoto:
-        return 'photo'
-    elif type(message_media) == tl.types.MessageMediaDocument:
-        return 'document'
-    elif type(message_media) == tl.types.MessageMediaContact:
-        return 'contact'
-
-def call(method, args):
-    getattr(client, method)(*args)
 
 def progress_callback(size, total_size):
     pyotherside.send('progress', size/total_size)

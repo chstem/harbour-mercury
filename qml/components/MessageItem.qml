@@ -56,14 +56,33 @@ ListItem {
             asynchronous: true
             width: Math.min(parent.width, sourceSize.width)
             height: sourceSize.height / sourceSize.width * width
-            visible: model.media === 'photo' ? true : false
-            source: visible ? model.filename : ''
+            visible: model.media === "photo" ? true : false
+            source: visible ? model.filename : ""
         }
         Text {
             width: parent.width
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-            visible: model.media === 'photo' ? true : false
-            text: visible ? model.caption : ''
+            visible: model.media === "photo" ? true : false
+            text: visible ? model.caption : ""
+            wrapMode: Text.Wrap
+        }
+
+        // Document
+        IconButton {
+            visible: model.media === "document" ? true : false
+            icon.source: model.downloaded ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-document"
+            onClicked: {
+                if (mode.downloaded === true) {
+                    telegram.fcall(download, [model.media, model.media_id])
+                } else {
+                }
+            }
+        }
+        Text {
+            width: parent.width
+            color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+            visible: model.media === "document" ? true : false
+            text: model.caption
             wrapMode: Text.Wrap
         }
     }
