@@ -17,11 +17,15 @@ class FileManager:
             file_name = self.get_photo_path(media)
             media_id = media.photo.id
             mediadict['caption'] = media.caption
-        if t == 'document':
+        elif t == 'document':
             file_name = self.get_document_path(media)
             media_id = media.document.id
             mediadict['caption'] = os.path.basename(file_name)
-        if t == 'contact':
+        elif t == 'webpage':
+            file_name = media.webpage.url
+            media_id = media.webpage.id
+            mediadict['caption'] = media.webpage.site_name + media.webpage.title
+        elif t == 'contact':
             raise NotImplemented
         mediadict['type'] = t
         mediadict['media_id'] = str(media_id)

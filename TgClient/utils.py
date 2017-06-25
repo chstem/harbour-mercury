@@ -20,3 +20,6 @@ def get_media_type(message_media):
         return 'document'
     elif type(message_media) == tl.types.MessageMediaContact:
         return 'contact'
+    elif type(message_media) == tl.types.MessageMediaWebPage:
+        return 'webpage'
+    raise TypeError('unsupported TL media type')
