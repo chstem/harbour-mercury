@@ -30,7 +30,7 @@ class FileManager:
         mediadict['type'] = t
         mediadict['media_id'] = str(media_id)
         mediadict['filename'] = file_name
-        mediadict['downloaded'] = int(os.path.isfile(file_name))
+        mediadict['downloaded'] = float(os.path.isfile(file_name))
         self.media[media_id] = media
         return mediadict
 

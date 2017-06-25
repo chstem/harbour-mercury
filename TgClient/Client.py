@@ -176,7 +176,7 @@ class Client(TelegramClient):
         msgdict = {
             'name' : utils.get_display_name(sender),
             'time' : msg.date.timestamp() * 1000,
-            'message' :  msg.message,
+            'message' : '',
             'media' : '',
             'media_data' : None,
             'action' : '',
@@ -184,6 +184,9 @@ class Client(TelegramClient):
 
         if hasattr(msg, 'action'):
             msgdict['action'] = str(msg.action)
+        else:
+            msgdict['message'] = msg.message
+
         if getattr(msg, 'media', None):
             msgdict['media_data'] = self.filemanager.get_msg_media(msg.media)
             msgdict['media'] = msgdict['media_data']['type']
