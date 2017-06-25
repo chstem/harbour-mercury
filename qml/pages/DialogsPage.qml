@@ -98,6 +98,8 @@ Page {
     }
 
     Component.onCompleted: {
+        currentDialog.entityID = ""
+        currentDialog.title = ""
         telegram.fcall('request_dialogs', [])
     }
 }
