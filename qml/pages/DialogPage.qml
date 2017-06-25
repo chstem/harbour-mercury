@@ -62,6 +62,9 @@ Page {
     function jumpToBottom() {
         messagesView.positionViewAtEnd()
     }
+    function getDelegateInstanceAt(index) {
+        return messagesView.contentItem.children[index];
+    }
 
 }
 

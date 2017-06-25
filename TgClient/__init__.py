@@ -1,4 +1,5 @@
 import os
+import shutil
 import pyotherside
 from .Client import Client
 
@@ -73,3 +74,15 @@ def connect():
 
 def call(method, args):
     getattr(client, method)(*args)
+
+def file_copy(source, target):
+    if source.startswith('file://'):
+        source = source[7:]
+    if target.startswith('file://'):
+        target = target[7:]
+    shutil.copy(source, target)
+
+def file_remove(path):
+    if path.startswith('file://'):
+        path = path[7:]
+    os.remove(path)

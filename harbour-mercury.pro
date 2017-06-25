@@ -49,6 +49,7 @@ DISTFILES += \
     qml/pages/DialogsPage.qml \
     qml/pages/DialogPage.qml \
     qml/pages/ContactsPage.qml \
+    qml/pages/ImagePage.qml \
     qml/components/AppNotification.qml \
     qml/components/AppNotificationItem.qml \
     qml/components/MessageItem.qml

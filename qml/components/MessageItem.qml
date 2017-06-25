@@ -22,9 +22,10 @@ import Sailfish.Silica 1.0
 ListItem {
     id: delegate
 
+    property alias mediaItem: mediaLoader.item
+
     contentHeight: dialog.height + Theme.paddingMedium
     contentWidth: parent.width
-
 
     Column {
         id: dialog
@@ -38,7 +39,7 @@ ListItem {
         Text {
             width: parent.width
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-            text: model.name + " " + new Date(model.time).toLocaleTimeString(Qt.locale(), "HH:mm")
+            text: name + " " + new Date(time).toLocaleTimeString(Qt.locale(), "HH:mm")
             font.bold: true
         }
 
@@ -46,44 +47,93 @@ ListItem {
         Text {
             width: parent.width
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-            visible: model.message.length > 0
-            text: model.message
+            visible: message.length > 0
+            text: message
             wrapMode: Text.Wrap
         }
 
-        // Photo +  Caption
-        Image {
-            asynchronous: true
-            width: Math.min(parent.width, sourceSize.width)
-            height: sourceSize.height / sourceSize.width * width
-            visible: model.media === "photo" ? true : false
-            source: visible ? model.filename : ""
-        }
-        Text {
+        // Media
+        Loader {
+            id: mediaLoader
             width: parent.width
-            color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-            visible: model.media === "photo" ? true : false
-            text: visible ? model.caption : ""
-            wrapMode: Text.Wrap
         }
 
-        // Document
-        IconButton {
-            visible: model.media === "document" ? true : false
-            icon.source: model.downloaded ? "image://theme/icon-m-cloud-download" : "image://theme/icon-m-document"
-            onClicked: {
-                if (mode.downloaded === true) {
-                    telegram.fcall(download, [model.media, model.media_id])
-                } else {
+        // Photo
+        Component {
+            id: photoItem
+            Column {
+                property real downloaded: media_data.downloaded
+                MouseArea {
+                    width: parent.width
+                    height: image.height
+                    Image {
+                        id: image
+                        asynchronous: true
+                        width: Math.min(parent.width, sourceSize.width)
+                        height: sourceSize.height / sourceSize.width * width
+                        source: downloaded == 1 ? media_data.filename : "image://theme/icon-m-cloud-download"
+                    }
+                    ProgressCircle {
+                        id: progressCircle
+                        anchors.fill: image
+                        value: downloaded
+                        visible: value > 0 & value < 1
+                    }
+                    onClicked: {
+                        if (downloaded == 1) {
+                            pageStack.push(Qt.resolvedUrl("../pages/ImagePage.qml"), {source:media_data.filename})
+                        } else {
+                            downloaded = 0.0001
+                            telegram.fcall("download", [media_data.media_id])
+                        }
+                    }
+                }
+                Text {
+                    width: parent.width
+                    color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+                    text: qsTr("Photo") + ": " + media_data.caption
+                    wrapMode: Text.Wrap
                 }
             }
         }
-        Text {
-            width: parent.width
-            color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
-            visible: model.media === "document" ? true : false
-            text: model.caption
-            wrapMode: Text.Wrap
+
+        Component {
+            id: docItem
+            Column {
+                property real downloaded: media_data.downloaded
+                IconButton {
+                    id: iconButton
+                    icon.source: downloaded == 1 ? "image://theme/icon-m-document" : "image://theme/icon-m-cloud-download"
+                    onClicked: {
+                        if (downloaded == 1) {
+                            Qt.openUrlExternally(media_data.filename)
+                        } else {
+                            downloaded = 0.0001
+                            telegram.fcall("download", [media_data.media_id])
+                        }
+                    }
+                    ProgressCircle {
+                        id: progressCircle
+                        anchors.fill: iconButton
+                        value: downloaded
+                        visible: value > 0 & value < 1
+                    }
+                }
+                Text {
+                    width: parent.width
+                    color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+                    text: qsTr("File") + ": " + media_data.caption
+                    wrapMode: Text.Wrap
+                }
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        if (model.media === "document") {
+            mediaLoader.sourceComponent = docItem
+        } else if (model.media === "photo") {
+            mediaLoader.sourceComponent = photoItem
         }
     }
 }

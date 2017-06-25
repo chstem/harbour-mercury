@@ -103,6 +103,9 @@ class Client(TelegramClient):
 
         pyotherside.send('update_messages', messages_model)
 
+    def download(self, media_id):
+        self.filemanager.download_media(int(media_id))
+
     ########################
     ###  update handler  ###
     ########################
@@ -174,24 +177,15 @@ class Client(TelegramClient):
             'name' : utils.get_display_name(sender),
             'time' : msg.date.timestamp() * 1000,
             'message' :  msg.message,
-            'filename' : '',
             'media' : '',
+            'media_data' : None,
             'action' : '',
-            'caption' : '',
         }
 
         if hasattr(msg, 'action'):
             msgdict['action'] = str(msg.action)
         if getattr(msg, 'media', None):
-            fname = self.filemanager.download_msg_media(msg)
-            msgdict['media'] = utils.get_media_type(msg.media)
-            msgdict['filename'] = os.path.abspath(fname)
-            if msgdict['filename'] == 'photo':
-                msgdict['caption'] = msg.media.caption
-            if msgdict['filename'] == 'document':
-                msgdict['caption'] = os.path.basename(fname)
+            msgdict['media_data'] = self.filemanager.get_msg_media(msg.media)
+            msgdict['media'] = msgdict['media_data']['type']
 
         return msgdict
-
-def progress_callback(size, total_size):
-    pyotherside.send('progress', size/total_size)
