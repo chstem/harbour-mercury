@@ -104,7 +104,7 @@ class Client(TelegramClient):
         pyotherside.send('update_messages', messages_model)
 
     def download(self, media_id):
-        self.filemanager.download_media(int(media_id))
+        self.filemanager.download_media(media_id)
 
     ########################
     ###  update handler  ###
@@ -168,7 +168,7 @@ class Client(TelegramClient):
             raise ValueError('Unkown type {}'.format(entity_type))
 
     def get_contacts(self):
-        r = client.invoke(tl.functions.contacts.GetContactsRequest(client.api_hash))
+        r = self.invoke(tl.functions.contacts.GetContactsRequest(self.api_hash))
         for contact, user in zip(r.contacts, r.users):
             self.contacts['user_{}'.format(user.id)] = contact, user
 

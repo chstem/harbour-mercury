@@ -27,8 +27,9 @@ class FileManager:
             mediadict['caption'] = media.webpage.site_name + media.webpage.title
         elif t == 'contact':
             raise NotImplemented
+        media_id = str(media_id)
         mediadict['type'] = t
-        mediadict['media_id'] = str(media_id)
+        mediadict['media_id'] = media_id
         mediadict['filename'] = file_name
         mediadict['downloaded'] = float(os.path.isfile(file_name))
         self.media[media_id] = media
@@ -76,7 +77,6 @@ class FileManager:
             size = media.photo.sizes[0]
         else:
             size = media.photo.sizes[-1]
-        file_size = size.size
 
         dirname = os.path.dirname(file_path)
         if not os.path.isdir(dirname):
@@ -84,13 +84,13 @@ class FileManager:
 
         self.client.download_file(
             tl.types.InputFileLocation(
-                volume_id=size.location.volume_id,
-                local_id=size.location.local_id,
-                secret=size.location.secret
+                volume_id = size.location.volume_id,
+                local_id = size.location.local_id,
+                secret = size.location.secret,
             ),
             file_path,
-            file_size=file_size,
-            progress_callback=progress_callback(media.photo.id)
+            file_size = size.size,
+            progress_callback = progress_callback(media.photo.id),
         )
 
     def download_document(self, media, file_path):
@@ -101,13 +101,13 @@ class FileManager:
 
         self.client.download_file(
             tl.types.InputDocumentFileLocation(
-                id=media.document.id,
-                access_hash=media.document.access_hash,
-                version=media.document.version
+                id = media.document.id,
+                access_hash = media.document.access_hash,
+                version = media.document.version,
             ),
             file_path,
-            file_size=media.document.size,
-            progress_callback=progress_callback(media.document.id)
+            file_size = media.document.size,
+            progress_callback = progress_callback(media.document.id),
         )
 
     @staticmethod

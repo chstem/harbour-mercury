@@ -35,7 +35,7 @@ CONFIG += sailfishapp_i18n
 TRANSLATIONS += translations/harbour-mercury-de.ts
 
 TgClient.path = /usr/share/harbour-mercury/TgClient
-TgClient.files = TgClient/*
+TgClient.files = TgClient/*.py
 
 INSTALLS += TgClient
 
