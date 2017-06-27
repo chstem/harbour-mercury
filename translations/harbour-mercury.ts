@@ -62,20 +62,16 @@
     </message>
 </context>
 <context>
-    <name>ImagePage</name>
+    <name>DocumentItem</name>
     <message>
-        <source>Save to Downloads</source>
+        <source>File</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
-    <name>MessageItem</name>
+    <name>ImagePage</name>
     <message>
-        <source>Photo</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>File</source>
+        <source>Save to Downloads</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -91,6 +87,13 @@
     </message>
     <message>
         <source>Password</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>PhotoItem</name>
+    <message>
+        <source>Photo</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

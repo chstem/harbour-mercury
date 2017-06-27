@@ -11,40 +11,39 @@ class FileManager:
         self.media = {}
 
     def get_msg_media(self, media):
-        t = utils.get_media_type(media)
+        media_type = utils.get_media_type(media)
         mediadict = {}
-        if t == 'photo':
+        if media_type == 'photo':
             file_name = self.get_photo_path(media)
             media_id = media.photo.id
             mediadict['caption'] = media.caption
-        elif t == 'document':
+        elif media_type == 'document':
             file_name = self.get_document_path(media)
             media_id = media.document.id
             mediadict['caption'] = os.path.basename(file_name)
-        elif t == 'webpage':
+        elif media_type == 'webpage':
             file_name = media.webpage.url
             media_id = media.webpage.id
             mediadict['caption'] = media.webpage.site_name + media.webpage.title
-        elif t == 'contact':
+        elif media_type == 'contact':
             raise NotImplemented
         media_id = str(media_id)
-        mediadict['type'] = t
         mediadict['media_id'] = media_id
         mediadict['filename'] = file_name
         mediadict['downloaded'] = float(os.path.isfile(file_name))
         self.media[media_id] = media
-        return mediadict
+        return media_type, mediadict
 
     def download_media(self, media_id):
         media = self.media[media_id]
-        t = utils.get_media_type(media)
-        if t == 'photo':
+        media_type = utils.get_media_type(media)
+        if media_type == 'photo':
             file_name = self.get_photo_path(media)
             self.download_photo(media, file_name)
-        if t == 'document':
+        if media_type == 'document':
             file_name = self.get_document_path(media)
             self.download_document(media, file_name)
-        if t == 'contact':
+        if media_type == 'contact':
             self.download_contact(media)
 
     def get_photo_path(self, media):

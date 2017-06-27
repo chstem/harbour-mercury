@@ -98,9 +98,11 @@ Page {
     }
 
     Component.onCompleted: {
+        telegram.fcall('request_dialogs', [])
+        // clear current dialog data
+        dialogModel.clear()
         currentDialog.entityID = ""
         currentDialog.title = ""
-        telegram.fcall('request_dialogs', [])
     }
 }
 

@@ -19,7 +19,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-import "../components"
+import "../components/messages"
 
 
 Page {
@@ -48,8 +48,22 @@ Page {
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right
+                spacing: Theme.paddingLarge
                 model: dialogModel
-                delegate: MessageItem {}
+                delegate: ListItem {
+                    property alias downloaded: itemLoader.downloaded
+                    id: delegate
+                    contentHeight: itemLoader.height
+                    Loader {
+                        property alias delegate: delegate
+                        property real downloaded: model.mdata.downloaded
+                        id: itemLoader
+                        width: parent.width
+                    }
+                    Component.onCompleted: {
+                        itemLoader.source = "../components/messages/" + capitalize(model.type) + "Item.qml"
+                    }
+                }
                 VerticalScrollDecorator { flickable: messagesView }
             }
         }
@@ -59,9 +73,15 @@ Page {
         telegram.fcall('request_messages', [currentDialog.entityID])
     }
 
+    function capitalize(s)
+    {
+        return s && s[0].toUpperCase() + s.slice(1);
+    }
+
     function jumpToBottom() {
         messagesView.positionViewAtEnd()
     }
+
     function getDelegateInstanceAt(index) {
         return messagesView.contentItem.children[index];
     }

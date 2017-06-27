@@ -16,13 +16,14 @@
 #    along with Mercury. If not, see <http://www.gnu.org/licenses/>.
 
 import pyotherside
+import time
 
 connect_state = 'wait'
 connect_state = 'enter_number'
-#connect_state = True
+connect_state = True
 
 class TestClient():
-    
+
     # login code
     def request_code(self, phonenumber=None):
         pass
@@ -40,15 +41,48 @@ class TestClient():
 
     # request data
     def request_dialogs(self):
-        dialogs_model = [ 
+        dialogs_model = [
             {'name':'Chat1', 'entity_id':'chat_1'},
             {'name':'Chat2', 'entity_id':'chat_2'},
-        ]    
+        ]
         pyotherside.send('update_dialogs', dialogs_model)
-        
-    def request_messages(self, ID):        
+
+    def request_messages(self, ID):
         messages_model = [
-            {'name':'User', 'message':'Hello, World!', 'time':'00:42'},
-            {'name':'World', 'message':'Hey, how are you?', 'time':'00:43'},
+            {
+                'type':'message',
+                'mdata': {
+                    'name':'User',
+                    'message':'Hello, World!',
+                    'time':time.time()*1000,
+                    'downloaded': 0.0,
+                },
+            },
+            {
+                'type':'message',
+                'mdata': {
+                    'name':'World',
+                    'message':'Hey, how are you?',
+                    'time':time.time()*1000,
+                    'downloaded': 0.0
+                },
+            },
+            {
+                'type':'photo',
+                'mdata': {
+                    'filename':'photo.jpg',
+                    'media_id':'1234',
+                    'caption':'Photo',
+                    'downloaded': 0.0,
+                    'time':time.time()*1000,
+                }
+            },
         ]
         pyotherside.send('update_messages', messages_model)
+
+    def download(self, media_id):
+        # simulate download
+        l = 3
+        for i in range(1,l+1):
+            time.sleep(1)
+            pyotherside.send('progress', media_id, i/l)

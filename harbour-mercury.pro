@@ -52,4 +52,7 @@ DISTFILES += \
     qml/pages/ImagePage.qml \
     qml/components/AppNotification.qml \
     qml/components/AppNotificationItem.qml \
-    qml/components/MessageItem.qml
+    qml/components/messages/MessageItem.qml \
+    qml/components/messages/PhotoItem.qml \
+    qml/components/messages/DocumentItem.qml \
+    qml/components/messages/ActionItem.qml

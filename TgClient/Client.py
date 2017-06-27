@@ -173,22 +173,27 @@ class Client(TelegramClient):
             self.contacts['user_{}'.format(user.id)] = contact, user
 
     def build_message_dict(self, msg, sender):
-        msgdict = {
+        mdata = {
             'name' : utils.get_display_name(sender),
             'time' : msg.date.timestamp() * 1000,
-            'message' : '',
-            'media' : '',
-            'media_data' : None,
-            'action' : '',
+            'downloaded' : 0.0,
         }
+        msgdict = {
+            'type' : '',
+            'mdata' : mdata,
+            }
 
         if hasattr(msg, 'action'):
-            msgdict['action'] = str(msg.action)
-        else:
-            msgdict['message'] = msg.message
+            msgdict['type'] = 'action'
+            msgdict['mdata']['action'] = str(msg.action)
 
-        if getattr(msg, 'media', None):
-            msgdict['media_data'] = self.filemanager.get_msg_media(msg.media)
-            msgdict['media'] = msgdict['media_data']['type']
+        elif getattr(msg, 'media', False):
+            media_type, media = self.filemanager.get_msg_media(msg.media)
+            msgdict['type'] = media_type
+            msgdict['mdata'].update(media)
+
+        else:
+            msgdict['type'] = 'message'
+            msgdict['mdata']['message'] = msg.message
 
         return msgdict

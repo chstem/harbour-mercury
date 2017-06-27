@@ -73,9 +73,9 @@ Python {
         setHandler("progress", function(media_id, value) {
             for (var i=0; i<dialogModel.count; i++) {
                 var mdict = dialogModel.get(i)
-                if (mdict.media !== "") {
-                    if (mdict.media_data.media_id === media_id) {
-                        pageStack.currentPage.getDelegateInstanceAt(i).mediaItem.downloaded = value
+                if (['photo', 'document'].indexOf(mdict.type) !== -1) {
+                    if (mdict.mdata.media_id === media_id) {
+                        pageStack.currentPage.getDelegateInstanceAt(i).downloaded = value
                         break
                     }
                 }
