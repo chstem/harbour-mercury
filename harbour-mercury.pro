@@ -55,4 +55,5 @@ DISTFILES += \
     qml/components/messages/MessageItem.qml \
     qml/components/messages/PhotoItem.qml \
     qml/components/messages/DocumentItem.qml \
+    qml/components/messages/WebpageItem.qml \
     qml/components/messages/ActionItem.qml

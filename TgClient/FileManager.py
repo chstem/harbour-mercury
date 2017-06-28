@@ -13,24 +13,32 @@ class FileManager:
     def get_msg_media(self, media):
         media_type = utils.get_media_type(media)
         mediadict = {}
+
         if media_type == 'photo':
             file_name = self.get_photo_path(media)
             media_id = media.photo.id
+            mediadict['downloaded'] = float(os.path.isfile(file_name))
             mediadict['caption'] = media.caption
+
         elif media_type == 'document':
             file_name = self.get_document_path(media)
             media_id = media.document.id
+            mediadict['filename'] = file_name
+            mediadict['downloaded'] = float(os.path.isfile(file_name))
             mediadict['caption'] = os.path.basename(file_name)
+
         elif media_type == 'webpage':
             file_name = media.webpage.url
             media_id = media.webpage.id
-            mediadict['caption'] = media.webpage.site_name + media.webpage.title
+            mediadict['url'] = media.webpage.url
+            mediadict['title'] = media.webpage.title
+            mediadict['site_name'] = media.webpage.site_name
+
         elif media_type == 'contact':
             raise NotImplemented
+
         media_id = str(media_id)
         mediadict['media_id'] = media_id
-        mediadict['filename'] = file_name
-        mediadict['downloaded'] = float(os.path.isfile(file_name))
         self.media[media_id] = media
         return media_type, mediadict
 
