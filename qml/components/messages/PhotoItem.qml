@@ -61,7 +61,7 @@ ListItem {
                     pageStack.push(Qt.resolvedUrl("../../pages/ImagePage.qml"), {source:mdata.filename})
                 } else {
                     downloaded = 0.0001
-                    telegram.fcall("download", [mdata.media_id])
+                    backend.fcall("download", [mdata.media_id])
                 }
             }
         }

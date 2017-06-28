@@ -29,7 +29,7 @@ ApplicationWindow
     allowedOrientations: defaultAllowedOrientations
 
     // Telegram API
-    Telethon { id: telegram }
+    Telethon { id: backend }
 
     // global properties
     ListModel {

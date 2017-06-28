@@ -37,7 +37,7 @@ Page {
                 text: qsTr("Save to Downloads");
 
                 onClicked: {
-                    telegram.file_copy(source.toString(), "/home/nemo/Downloads")
+                    backend.file_copy(source.toString(), "/home/nemo/Downloads")
                 }
             }
         }

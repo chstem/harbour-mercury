@@ -31,7 +31,7 @@ Page {
             MenuItem {
                 text: qsTr("Log Out")
                 onClicked: {
-                    telegram.fcall('log_out', [])
+                    backend.fcall('log_out', [])
                     pageStack.replace(Qt.resolvedUrl("StartPage.qml"), {}, PageStackAction.Immediate)
                 }
             }
@@ -96,7 +96,7 @@ Page {
     }
 
     Component.onCompleted: {
-        telegram.fcall('request_contacts', [])
+        backend.fcall('request_contacts', [])
     }
 }
 

@@ -17,6 +17,7 @@ class FileManager:
         if media_type == 'photo':
             file_name = self.get_photo_path(media)
             media_id = media.photo.id
+            mediadict['filename'] = file_name
             mediadict['downloaded'] = float(os.path.isfile(file_name))
             mediadict['caption'] = media.caption
 

@@ -63,7 +63,7 @@ Page {
                 text : "Connect"
                 anchors.horizontalCenter: parent.horizontalCenter
                 onClicked: {
-                    telegram.fcall('request_code', [number.text])
+                    backend.fcall('request_code', [number.text])
                     pageStack.replace(Qt.resolvedUrl("CodePage.qml"))
                 }
             }

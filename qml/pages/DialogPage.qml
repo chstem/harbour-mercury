@@ -70,7 +70,7 @@ Page {
     }
 
     Component.onCompleted: {
-        telegram.fcall('request_messages', [currentDialog.entityID])
+        backend.fcall('request_messages', [currentDialog.entityID])
     }
 
     function capitalize(s)

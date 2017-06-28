@@ -40,7 +40,7 @@ Python {
             console.log(message)
         })
 
-        // accept data from telegram
+        // accept data from Telegram
         setHandler("update_dialogs", function(dialogs) {
             dialogsModel.clear()
             for (var i=0; i<dialogs.length; i++) {
@@ -91,8 +91,6 @@ Python {
                 pageStack.replace(Qt.resolvedUrl("pages/ConnectPage.qml"))
             } else if (status === true) {
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
-            } else {
-                errorNotification.show("Unexpected Error")
             }
         });
     }
@@ -105,8 +103,6 @@ Python {
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
             } else if (status === "invalid") {
                 errorNotification.show("Invalid login code");
-            } else {
-                errorNotification.show("Unexpected Error")
             }
         })
     }

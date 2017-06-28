@@ -64,11 +64,11 @@ Page {
                 spacing: Theme.paddingLarge
                 Button {
                     text : "Submit"
-                    onClicked: telegram.send_code(code.text)
+                    onClicked: backend.send_code(code.text)
                 }
                 Button {
                     text : "Request Again"
-                    onClicked: telegram.fcall('request_code', [])
+                    onClicked: backend.fcall('request_code', [])
                 }
             }
         }

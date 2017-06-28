@@ -37,6 +37,6 @@ Page {
             size: BusyIndicatorSize.Large
         }
     }
-    Component.onCompleted: telegram.connect()
+    Component.onCompleted: backend.connect()
 }
 

@@ -31,7 +31,7 @@ Page {
             MenuItem {
                 text: qsTr("Log Out")
                 onClicked: {
-                    telegram.fcall('log_out', [])
+                    backend.fcall('log_out', [])
                     pageStack.replace(Qt.resolvedUrl("StartPage.qml"), {}, PageStackAction.Immediate)
                 }
             }
@@ -98,7 +98,7 @@ Page {
     }
 
     Component.onCompleted: {
-        telegram.fcall('request_dialogs', [])
+        backend.fcall('request_dialogs', [])
         // clear current dialog data
         dialogModel.clear()
         currentDialog.entityID = ""

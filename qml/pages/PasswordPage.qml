@@ -62,7 +62,7 @@ Page {
             Button {
                 text : "Send"
                 anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: telegram.send_pass(password.text)
+                onClicked: backend.send_pass(password.text)
             }
         }
     }
