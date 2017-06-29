@@ -18,7 +18,7 @@
 */
 import QtQuick 2.0
 import Sailfish.Silica 1.0
-
+import "../utils.js" as Utils
 
 Page {
     id: page
@@ -83,21 +83,22 @@ Page {
                         x: Theme.paddingLarge
 
                         Rectangle {
-                            height: label.height
+                            id: icon
+                            height: 1.5*text.height
                             width: height
                             radius: width*0.5
-                            color: "blue"
+                            color: "steelblue"
                             Text {
+                                id: text
                                 anchors.centerIn: parent
                                 color: "white"
-                                text: "AB"
+                                text: Utils.get_initials(model.name)
                             }
                         }
 
                         Label {
-                            id: label
+                            anchors.verticalCenter: icon.verticalCenter
                             text: model.name
-                            //anchors.verticalCenter: parent.verticalCenter
                             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
                         }
                     }
@@ -116,5 +117,6 @@ Page {
         backend.clearDialog()
         backend.fcall('request_dialogs', [])
     }
+
 }
 

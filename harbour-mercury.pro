@@ -42,6 +42,7 @@ INSTALLS += TgClient
 DISTFILES += \
     qml/harbour-mercury.qml \
     qml/Telethon.qml \
+    qml/utils.js \
     qml/pages/StartPage.qml \
     qml/pages/ConnectPage.qml \
     qml/pages/CodePage.qml \
