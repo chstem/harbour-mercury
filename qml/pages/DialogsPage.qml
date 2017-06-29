@@ -76,13 +76,28 @@ Page {
                     contentWidth: parent.width
 
                     Row {
+
                         id: dialog
                         width: parent.width
                         spacing: Theme.paddingMedium
                         x: Theme.paddingLarge
+
+                        Rectangle {
+                            height: label.height
+                            width: height
+                            radius: width*0.5
+                            color: "blue"
+                            Text {
+                                anchors.centerIn: parent
+                                color: "white"
+                                text: "AB"
+                            }
+                        }
+
                         Label {
+                            id: label
                             text: model.name
-                            anchors.verticalCenter: parent.verticalCenter
+                            //anchors.verticalCenter: parent.verticalCenter
                             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
                         }
                     }
