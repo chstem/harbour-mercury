@@ -20,6 +20,7 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
 import "../components/messages"
+import "../utils.js" as Utils
 
 
 Page {
@@ -60,7 +61,7 @@ Page {
                         width: parent.width
                     }
                     Component.onCompleted: {
-                        itemLoader.source = "../components/messages/" + capitalize(model.type) + "Item.qml"
+                        itemLoader.source = "../components/messages/" + Utils.capitalize(model.type) + "Item.qml"
                     }
                 }
                 VerticalScrollDecorator { flickable: messagesView }
@@ -72,17 +73,9 @@ Page {
         backend.fcall('request_messages', [currentDialog.entityID])
     }
 
-    function capitalize(s)
-    {
-        return s && s[0].toUpperCase() + s.slice(1);
-    }
-
     function jumpToBottom() {
         messagesView.positionViewAtEnd()
     }
 
-    function getDelegateInstanceAt(index) {
-        return messagesView.contentItem.children[index];
-    }
 }
 

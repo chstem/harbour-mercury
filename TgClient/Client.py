@@ -87,6 +87,7 @@ class Client(TelegramClient):
                 continue
             dialogdict = {}
             dialogdict['name'] = utils.get_display_name(entity)
+            dialogdict['icon'] = self.filemanager.get_dialog_photo(entity)
             dialogdict['entity_id'] = '{}_{}'.format(entity_type, entity.id)
 
             self.entities[dialogdict['entity_id']] = entity

@@ -42,8 +42,8 @@ class TestClient():
     # request data
     def request_dialogs(self):
         dialogs_model = [
-            {'name':'Chat1', 'entity_id':'chat_1'},
-            {'name':'Chat2', 'entity_id':'chat_2'},
+            {'name':'Chat One', 'entity_id':'chat_1'},
+            {'name':'Chat Two', 'entity_id':'chat_2'},
         ]
         pyotherside.send('update_dialogs', dialogs_model)
 

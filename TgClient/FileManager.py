@@ -43,6 +43,37 @@ class FileManager:
         self.media[media_id] = media
         return media_type, mediadict
 
+    def get_dialog_photo(self, chat):
+        if not chat.photo or type(chat.photo) == tl.types.ChatPhotoEmpty:
+            return ''
+        if type(chat.photo) == tl.types.ChatPhoto:
+            filename = os.path.join(self.settings['FILE_CACHE'], 'chats', str(chat.id))
+        elif type(chat.photo) == tl.types.UserProfilePhoto:
+            filename = os.path.join(self.settings['FILE_CACHE'], 'users', str(chat.id))
+        else:
+            pyotherside.send('log', (type(chat.photo), chat.id))
+            raise TypeError('Invalid Photo Type')
+
+        filename += utils.get_extension(chat.photo)
+
+        # choose size
+        if self.settings['DOWNLOAD_PREFER_SMALL']:
+            photo = chat.photo.photo_small
+        else:
+            photo = chat.photo.photo_big
+
+        if not os.path.isfile(filename):
+            self.client.download_file(
+                tl.types.InputFileLocation(
+                    volume_id = photo.volume_id,
+                    local_id = photo.local_id,
+                    secret = photo.secret,
+                ),
+                filename,
+            )
+
+        return filename
+
     def download_media(self, media_id):
         media = self.media[media_id]
         media_type = utils.get_media_type(media)
