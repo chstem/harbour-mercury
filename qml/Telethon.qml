@@ -27,6 +27,7 @@ Python {
     property var progressHandlers: []
 
     onError: {
+        pageStack.currentPage.error()
         console.log("Error: " + traceback)
         errorNotification.show(traceback)
     }
@@ -91,6 +92,11 @@ Python {
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
             }
         });
+    }
+
+    function retry() {
+        call('TgClient.reset_session')
+        connect()
     }
 
     function send_code(code) {

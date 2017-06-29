@@ -23,20 +23,38 @@ import Sailfish.Silica 1.0
 
 Page {
     allowedOrientations: Orientation.All
-    Column {
-        anchors.centerIn: parent
-        spacing: Theme.paddingLarge
-        Label {
-            anchors.horizontalCenter: parent.horizontalCenter
-            font.pixelSize: Theme.fontSizeLarge
-            text: 'Initializing Connection'
+    signal error
+
+    SilicaFlickable {
+        anchors.fill: parent
+
+        PullDownMenu {
+            MenuItem {
+                text: qsTr("Retry")
+                onClicked: {
+                    busyIndicator.running = true
+                    backend.retry()
+                }
+            }
         }
-        BusyIndicator {
-            anchors.horizontalCenter: parent.horizontalCenter
-            running: true
-            size: BusyIndicatorSize.Large
+
+        Column {
+            anchors.centerIn: parent
+            spacing: Theme.paddingLarge
+            Label {
+                anchors.horizontalCenter: parent.horizontalCenter
+                font.pixelSize: Theme.fontSizeLarge
+                text: 'Initializing Connection'
+            }
+            BusyIndicator {
+                id: busyIndicator
+                anchors.horizontalCenter: parent.horizontalCenter
+                running: true
+                size: BusyIndicatorSize.Large
+            }
         }
     }
     Component.onCompleted: backend.connect()
+    onError: busyIndicator.running = false
 }
 

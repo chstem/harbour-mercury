@@ -23,6 +23,7 @@ import Sailfish.Silica 1.0
 
 Page {
     id: page
+    signal error
 
     allowedOrientations: Orientation.All
 
@@ -57,6 +58,8 @@ Page {
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
                 inputMethodHints: Qt.ImhDigitsOnly
+                EnterKey.iconSource: "image://theme/icon-m-enter-next"
+                EnterKey.onClicked: send()
             }
 
             Row {
@@ -64,7 +67,7 @@ Page {
                 spacing: Theme.paddingLarge
                 Button {
                     text : "Submit"
-                    onClicked: backend.send_code(code.text)
+                    onClicked: send()
                 }
                 Button {
                     text : "Request Again"
@@ -72,5 +75,9 @@ Page {
                 }
             }
         }
+    }
+
+    function send() {
+        backend.send_code(code.text)
     }
 }

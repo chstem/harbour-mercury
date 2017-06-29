@@ -72,6 +72,9 @@ def connect():
 
     return True
 
+def reset_session():
+    os.remove('{}.session'.format(SESSION_ID))
+
 def call(method, args):
     getattr(client, method)(*args)
 

@@ -24,6 +24,7 @@ import Sailfish.Gallery 1.0
 Page {
     allowedOrientations: Orientation.All
     property alias source: image.source
+    signal error
 
     SilicaFlickable
     {

@@ -23,12 +23,12 @@ import Sailfish.Silica 1.0
 
 Page {
     id: page
+    signal error
 
     allowedOrientations: Orientation.All
 
     SilicaFlickable {
         anchors.fill: parent
-
         contentHeight: column.height
 
         Column {
@@ -57,17 +57,21 @@ Page {
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
                 inputMethodHints: Qt.ImhDigitsOnly
+                EnterKey.iconSource: "image://theme/icon-m-enter-next"
+                EnterKey.onClicked: connect()
             }
 
             Button {
                 text : "Connect"
                 anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: {
-                    backend.fcall('request_code', [number.text])
-                    pageStack.replace(Qt.resolvedUrl("CodePage.qml"))
-                }
+                onClicked: connect()
             }
         }
+    }
+
+    function connect() {
+        backend.fcall('request_code', [number.text])
+        pageStack.replace(Qt.resolvedUrl("CodePage.qml"))
     }
 
 }

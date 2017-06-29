@@ -22,10 +22,13 @@ import Sailfish.Silica 1.0
 
 Page {
     id: page
+    signal error
 
     allowedOrientations: Orientation.All
 
     SilicaFlickable {
+        anchors.fill: parent
+        contentHeight: column.height
 
         PullDownMenu {
             MenuItem {
@@ -42,9 +45,6 @@ Page {
                 }
             }
         }
-
-        anchors.fill: parent
-        contentHeight: column.height
 
         Column {
             id: column

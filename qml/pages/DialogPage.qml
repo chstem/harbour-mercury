@@ -24,6 +24,7 @@ import "../components/messages"
 
 Page {
     id: page
+    signal error
 
     allowedOrientations: Orientation.All
 

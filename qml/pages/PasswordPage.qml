@@ -23,6 +23,7 @@ import Sailfish.Silica 1.0
 
 Page {
     id: page
+    signal error
 
     allowedOrientations: Orientation.All
 
@@ -57,13 +58,19 @@ Page {
                 placeholderText: label
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeExtraLarge
+                EnterKey.iconSource: "image://theme/icon-m-enter-next"
+                EnterKey.onClicked: send()
             }
 
             Button {
                 text : "Send"
                 anchors.horizontalCenter: parent.horizontalCenter
-                onClicked: backend.send_pass(password.text)
+                onClicked: send()
             }
         }
+    }
+
+    function send() {
+        backend.send_pass(password.text)
     }
 }
