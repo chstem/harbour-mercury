@@ -17,6 +17,7 @@
     along with Mercury. If not, see <http://www.gnu.org/licenses/>.
 */
 import QtQuick 2.0
+import QtGraphicalEffects 1.0
 import Sailfish.Silica 1.0
 import "../utils.js" as Utils
 
@@ -82,24 +83,61 @@ Page {
                         spacing: Theme.paddingMedium
                         x: Theme.paddingLarge
 
-                        Rectangle {
-                            id: icon
-                            height: 1.5*text.height
+                        Loader {
+                            id: iconLoader
+                            height: 1.5*label.height
                             width: height
-                            radius: width*0.5
-                            color: "steelblue"
-                            Text {
-                                id: text
-                                anchors.centerIn: parent
-                                color: "white"
-                                text: Utils.get_initials(model.name)
-                            }
                         }
 
                         Label {
-                            anchors.verticalCenter: icon.verticalCenter
+                            id: label
+                            anchors.verticalCenter: iconLoader.verticalCenter
                             text: model.name
                             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+                        }
+
+                        Component {
+                            id: initials
+                            Rectangle {
+                                height: parent.height
+                                width: height
+                                radius: width*0.5
+                                color: "steelblue"
+                                Text {
+                                    anchors.centerIn: parent
+                                    color: "white"
+                                    text: Utils.get_initials(model.name)
+                                }
+                            }
+                        }
+                        Component {
+                            id: icon
+                            Image {
+                                id: image
+                                height: parent.height
+                                width: height
+                                source: model.icon
+                                layer.enabled: true
+                                layer.effect: OpacityMask {
+                                    maskSource: Item {
+                                        width: image.width
+                                        height: image.height
+                                        Rectangle {
+                                            anchors.centerIn: parent
+                                            width: parent.width
+                                            height: parent.height
+                                            radius: width
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Component.onCompleted: {
+                            if (model.icon === "") {
+                                iconLoader.sourceComponent = initials
+                            } else {
+                                iconLoader.sourceComponent = icon
+                            }
                         }
                     }
 
