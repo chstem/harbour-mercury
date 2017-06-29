@@ -20,6 +20,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 ListItem {
+    property real downloaded: mdata.downloaded
+    property string media_id: mdata.media_id
     width: parent.width
     contentHeight: column.height
 
@@ -48,7 +50,6 @@ ListItem {
                 asynchronous: true
                 width: Math.min(parent.width, sourceSize.width)
                 height: sourceSize.height / sourceSize.width * width
-                source: downloaded == 1.0 ? mdata.filename : "image://theme/icon-m-cloud-download"
             }
             ProgressCircle {
                 id: progressCircle
@@ -70,8 +71,34 @@ ListItem {
         Text {
             width: parent.width
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+            visible: mdata.caption.length > 0
             text: qsTr("Photo") + ": " + mdata.caption
             wrapMode: Text.Wrap
         }
+    }
+
+    onDownloadedChanged: {
+        if (downloaded === 1.0) {
+            delayPhoto.start()
+        }
+    }
+
+    Timer {
+        id: delayPhoto
+        interval: 500
+        onTriggered: {
+            if (downloaded === 1.0) {
+                image.source = mdata.filename
+            } else {
+                image.source = "image://theme/icon-m-cloud-download"
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        backend.registerProgressHandler(media_id, function (progress) {
+            downloaded = progress
+        })
+        delayPhoto.start()
     }
 }

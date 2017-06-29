@@ -98,11 +98,8 @@ Page {
     }
 
     Component.onCompleted: {
+        backend.clearDialog()
         backend.fcall('request_dialogs', [])
-        // clear current dialog data
-        dialogModel.clear()
-        currentDialog.entityID = ""
-        currentDialog.title = ""
     }
 }
 

@@ -51,12 +51,10 @@ Page {
                 spacing: Theme.paddingLarge
                 model: dialogModel
                 delegate: ListItem {
-                    property alias downloaded: itemLoader.downloaded
                     id: delegate
                     contentHeight: itemLoader.height
                     Loader {
                         property alias delegate: delegate
-                        property real downloaded: model.mdata.downloaded
                         id: itemLoader
                         width: parent.width
                     }

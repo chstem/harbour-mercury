@@ -24,6 +24,8 @@ import io.thp.pyotherside 1.3
 
 Python {
 
+    property var progressHandlers: []
+
     onError: {
         console.log("Error: " + traceback)
         errorNotification.show(traceback)
@@ -71,13 +73,9 @@ Python {
         })
 
         setHandler("progress", function(media_id, value) {
-            for (var i=0; i<dialogModel.count; i++) {
-                var mdict = dialogModel.get(i)
-                if (['photo', 'document'].indexOf(mdict.type) !== -1) {
-                    if (mdict.mdata.media_id === media_id) {
-                        pageStack.currentPage.getDelegateInstanceAt(i).downloaded = value
-                        break
-                    }
+            if (progressHandlers.hasOwnProperty(media_id)) {
+                for (var i=0; i<progressHandlers[media_id].length; i++) {
+                    progressHandlers[media_id][i](value)
                 }
             }
         })
@@ -113,10 +111,24 @@ Python {
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
             } else if (status === "invalid") {
                 errorNotification.show("Invalid password");
-            } else {
-
             }
         })
+    }
+
+    // set download progress handler
+    function registerProgressHandler(media_id, progress_callback) {
+        if (!progressHandlers.hasOwnProperty(media_id)) {
+            progressHandlers[media_id] = []
+        }
+        progressHandlers[media_id].push(progress_callback)
+    }
+
+    // clear dialog data
+    function clearDialog() {
+        dialogModel.clear()
+        currentDialog.entityID = ""
+        currentDialog.title = ""
+        progressHandlers = []
     }
 
     // generic call function

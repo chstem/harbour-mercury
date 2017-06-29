@@ -78,11 +78,19 @@ class TestClient():
                 }
             },
         ]
+        import copy
+        messages_model.extend(messages_model[1:2]*5)
+        msg = copy.deepcopy(messages_model[2])
+        msg['mdata']['media_id'] = '12345'
+        messages_model.append(msg)
+        msg = copy.deepcopy(messages_model[2])
+        msg['mdata']['media_id'] = '12345'
+        messages_model.append(msg)
         pyotherside.send('update_messages', messages_model)
 
     def download(self, media_id):
         # simulate download
-        l = 3
+        l = 10
         for i in range(1,l+1):
-            time.sleep(1)
+            time.sleep(0.5)
             pyotherside.send('progress', media_id, i/l)

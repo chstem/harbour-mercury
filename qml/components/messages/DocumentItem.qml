@@ -20,6 +20,8 @@ import QtQuick 2.0
 import Sailfish.Silica 1.0
 
 ListItem {
+    property real downloaded: mdata.downloaded
+    property string media_id: mdata.media_id
     width: parent.width
     contentHeight: column.height
 
@@ -42,7 +44,7 @@ ListItem {
         // Document
         IconButton {
             id: iconButton
-            icon.source: downloaded == 1 ? "image://theme/icon-m-document" : "image://theme/icon-m-cloud-download"
+            icon.source: downloaded === 1.0 ? "image://theme/icon-m-document" : "image://theme/icon-m-cloud-download"
             onClicked: {
                 if (downloaded == 1) {
                     Qt.openUrlExternally(mdata.filename)
@@ -66,5 +68,11 @@ ListItem {
             text: qsTr("File") + ": " + mdata.caption
             wrapMode: Text.Wrap
         }
+    }
+
+    Component.onCompleted: {
+        backend.registerProgressHandler(media_id, function (progress) {
+            downloaded = progress
+        })
     }
 }
