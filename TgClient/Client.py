@@ -79,6 +79,7 @@ class Client(TelegramClient):
     def request_dialogs(self):
         dialogs, entities = self.get_dialogs(limit=0)
         dialogs_model = []
+        download_queue = []
 
         for entity in entities:
             entity_type = utils.get_entity_type(entity)
@@ -86,14 +87,27 @@ class Client(TelegramClient):
                 # no access, do not add to dialogs_model
                 continue
             dialogdict = {}
+            filename = self.filemanager.get_dialog_photo(entity)
             dialogdict['name'] = utils.get_display_name(entity)
-            dialogdict['icon'] = self.filemanager.get_dialog_photo(entity)
+            dialogdict['icon'] = filename
             dialogdict['entity_id'] = '{}_{}'.format(entity_type, entity.id)
 
             self.entities[dialogdict['entity_id']] = entity
+
+            if filename:
+                if not os.path.isfile(filename) or not os.path.getsize(filename):
+                    # queue for download and send preliminary empty icon
+                    download_queue.append((entity, filename))
+                    dialogdict['icon'] = ''
+
             dialogs_model.append(dialogdict)
 
         pyotherside.send('update_dialogs', dialogs_model)
+
+        # start downloads
+        for chat, filename in download_queue:
+            self.filemanager.download_dialog_photo(chat, filename)
+        pyotherside.send('log', 'all chat icons downloaded')
 
     def request_messages(self, ID):
         entity = self.get_entity(ID)

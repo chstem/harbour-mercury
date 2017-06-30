@@ -17,6 +17,7 @@
 
 import pyotherside
 import time
+import threading
 
 connect_state = 'wait'
 connect_state = 'enter_number'
@@ -42,8 +43,8 @@ class TestClient():
     # request data
     def request_dialogs(self):
         dialogs_model = [
-            {'name':'Chat One', 'entity_id':'chat_1'},
-            {'name':'Chat Two', 'entity_id':'chat_2'},
+            {'name':'Chat One', 'entity_id':'chat_1', 'icon':''},
+            {'name':'Chat Two', 'entity_id':'chat_2', 'icon':''},
         ]
         pyotherside.send('update_dialogs', dialogs_model)
 
@@ -79,7 +80,7 @@ class TestClient():
             },
         ]
         import copy
-        messages_model.extend(messages_model[1:2]*5)
+        messages_model.extend(messages_model[1:2]*2)
         msg = copy.deepcopy(messages_model[2])
         msg['mdata']['media_id'] = '12345'
         messages_model.append(msg)
@@ -90,7 +91,10 @@ class TestClient():
 
     def download(self, media_id):
         # simulate download
-        l = 10
-        for i in range(1,l+1):
-            time.sleep(0.5)
-            pyotherside.send('progress', media_id, i/l)
+        l = 20
+        def do():
+            for i in range(1,l+1):
+                time.sleep(0.5)
+                pyotherside.send('progress', media_id, i/l)
+        thread = threading.Thread(target=do)
+        thread.start()

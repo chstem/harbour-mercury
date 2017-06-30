@@ -72,6 +72,7 @@ Page {
 
                 delegate: ListItem {
                     id: delegate
+                    property string iconSource: model.icon
 
                     contentHeight: dialog.height + Theme.paddingMedium
                     contentWidth: parent.width
@@ -87,6 +88,7 @@ Page {
                             id: iconLoader
                             height: 1.5*label.height
                             width: height
+                            sourceComponent: (iconSource == "") ? initials : icon
                         }
 
                         Label {
@@ -110,13 +112,14 @@ Page {
                                 }
                             }
                         }
+
                         Component {
                             id: icon
                             Image {
                                 id: image
                                 height: parent.height
                                 width: height
-                                source: model.icon
+                                source: iconSource
                                 layer.enabled: true
                                 layer.effect: OpacityMask {
                                     maskSource: Item {
@@ -132,12 +135,9 @@ Page {
                                 }
                             }
                         }
+
                         Component.onCompleted: {
-                            if (model.icon === "") {
-                                iconLoader.sourceComponent = initials
-                            } else {
-                                iconLoader.sourceComponent = icon
-                            }
+                            backend.registerIconHandler(entity_id, function(filename) {iconSource = filename})
                         }
                     }
 
@@ -155,6 +155,7 @@ Page {
         backend.clearDialog()
         backend.fcall('request_dialogs', [])
     }
+
 
 }
 

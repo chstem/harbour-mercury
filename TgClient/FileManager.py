@@ -1,5 +1,7 @@
 import os
 import pyotherside
+import threading
+
 from telethon import tl
 from . import utils
 
@@ -56,23 +58,34 @@ class FileManager:
 
         filename += utils.get_extension(chat.photo)
 
+        #if not os.path.isfile(filename) or not os.path.getsize(filename):
+            ## initialize download and send preliminary empty return value
+            #thread = threading.Thread(target=self.download_dialog_photo, args=(chat, filename))
+            #thread.start()
+            #return ''
+
+        return filename
+
+    def download_dialog_photo(self, chat, filename):
+
         # choose size
         if self.settings['DOWNLOAD_PREFER_SMALL']:
             photo = chat.photo.photo_small
         else:
             photo = chat.photo.photo_big
 
-        if not os.path.isfile(filename):
-            self.client.download_file(
-                tl.types.InputFileLocation(
-                    volume_id = photo.volume_id,
-                    local_id = photo.local_id,
-                    secret = photo.secret,
-                ),
-                filename,
-            )
+        #client = self.client.create_new_connection(on_dc=photo.dc_id)
+        self.client.download_file(
+            tl.types.InputFileLocation(
+                volume_id = photo.volume_id,
+                local_id = photo.local_id,
+                secret = photo.secret,
+            ),
+            filename,
+        )
 
-        return filename
+        entity_id = '{}_{}'.format(utils.get_entity_type(chat), chat.id)
+        pyotherside.send('icon', entity_id, filename)
 
     def download_media(self, media_id):
         media = self.media[media_id]

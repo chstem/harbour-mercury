@@ -25,6 +25,7 @@ import io.thp.pyotherside 1.3
 Python {
 
     property var progressHandlers: []
+    property var iconHandlers: []
 
     onError: {
         pageStack.currentPage.error()
@@ -81,6 +82,10 @@ Python {
             }
         })
 
+        setHandler("icon", function(entity_id, source) {
+            if (iconHandlers.hasOwnProperty(entity_id)) iconHandlers[entity_id](source)
+        })
+
     }
 
      // set up connection to Telegram
@@ -127,6 +132,11 @@ Python {
             progressHandlers[media_id] = []
         }
         progressHandlers[media_id].push(progress_callback)
+    }
+
+    // set icon update handler
+    function registerIconHandler(entity_id, icon_callback) {
+        iconHandlers[entity_id] = icon_callback
     }
 
     // clear dialog data
