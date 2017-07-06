@@ -1,7 +1,6 @@
 import os
 import shutil
 import pyotherside
-from .Client import Client
 
 SESSION_ID = 'mercury'
 LOCAL_DIR = '/home/nemo/.local/share/harbour-mercury/'
@@ -20,7 +19,9 @@ if not os.path.isdir(LOCAL_DIR):
 if not os.path.isdir(FILE_CACHE):
     os.makedirs(FILE_CACHE)
 
+# set working directory before loading client !!!
 os.chdir(LOCAL_DIR)
+from .Client import Client
 
 client = None
 def connect():

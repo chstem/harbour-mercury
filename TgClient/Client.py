@@ -18,9 +18,10 @@
 import os
 import pyotherside
 from telethon import *
-from . import utils
 
 from .FileManager import FileManager
+from . import database
+from . import utils
 
 class Client(TelegramClient):
 
@@ -92,7 +93,9 @@ class Client(TelegramClient):
             dialogdict['icon'] = filename
             dialogdict['entity_id'] = '{}_{}'.format(entity_type, entity.id)
 
+            # store
             self.entities[dialogdict['entity_id']] = entity
+            database.add_dialog(entity)
 
             if filename:
                 if not os.path.isfile(filename) or not os.path.getsize(filename):
@@ -112,6 +115,9 @@ class Client(TelegramClient):
     def request_messages(self, ID):
         entity = self.get_entity(ID)
         total_count, messages, senders = self.get_message_history(entity)
+
+        # store
+        database.add_messages(entity.id, *messages)
 
         # Iterate over all (in reverse order so the latest appear last)
         messages_model = [self.build_message_dict(msg, sender) for msg, sender in zip(reversed(messages), reversed(senders))]
