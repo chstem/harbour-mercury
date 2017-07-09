@@ -10,40 +10,21 @@ class FileManager:
     def __init__(self, client, settings):
         self.client = client
         self.settings = settings
-        self.media = {}
 
     def get_msg_media(self, media):
         media_type = utils.get_media_type(media)
-        mediadict = {}
 
         if media_type == 'photo':
             file_name = self.get_photo_path(media)
-            media_id = media.photo.id
-            mediadict['filename'] = file_name
-            mediadict['downloaded'] = float(os.path.isfile(file_name))
-            mediadict['caption'] = media.caption
 
         elif media_type == 'document':
             file_name = self.get_document_path(media)
-            media_id = media.document.id
-            mediadict['filename'] = file_name
-            mediadict['downloaded'] = float(os.path.isfile(file_name))
-            mediadict['caption'] = os.path.basename(file_name)
-
-        elif media_type == 'webpage':
-            file_name = media.webpage.url
-            media_id = media.webpage.id
-            mediadict['url'] = media.webpage.url
-            mediadict['title'] = media.webpage.title
-            mediadict['site_name'] = media.webpage.site_name
 
         elif media_type == 'contact':
             raise NotImplemented
 
-        media_id = str(media_id)
-        mediadict['media_id'] = media_id
-        self.media[media_id] = media
-        return media_type, mediadict
+        downloaded = float(os.path.isfile(file_name))
+        return file_name, downloaded
 
     def get_dialog_photo(self, chat):
         if not chat.photo or type(chat.photo) == tl.types.ChatPhotoEmpty:

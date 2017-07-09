@@ -203,12 +203,51 @@ class Client(TelegramClient):
             msgdict['mdata']['action'] = str(msg.action)
 
         elif getattr(msg, 'media', False):
-            media_type, media = self.filemanager.get_msg_media(msg.media)
-            msgdict['type'] = media_type
-            msgdict['mdata'].update(media)
+
+            media_type, media = self.build_media_dict(msg.media)
+            if media_type == 'webpageempty':
+                msgdict['type'] = 'message'
+                msgdict['mdata']['message'] = msg.message
+            else:
+                msgdict['type'] = media_type
+                msgdict['mdata'].update(media)
 
         else:
             msgdict['type'] = 'message'
             msgdict['mdata']['message'] = msg.message
 
         return msgdict
+
+    def build_media_dict(self, media):
+        media_type = utils.get_media_type(media)
+        mediadict = {}
+
+        if media_type == 'photo':
+            file_name, downloaded = self.filemanager.get_msg_media(media)
+            media_id = media.photo.id
+            mediadict['filename'] = file_name
+            mediadict['downloaded'] = downloaded
+            mediadict['caption'] = media.caption
+
+        elif media_type == 'document':
+            file_name, downloaded = self.filemanager.get_msg_media(media)
+            media_id = media.document.id
+            mediadict['filename'] = file_name
+            mediadict['downloaded'] = downloaded
+            mediadict['caption'] = os.path.basename(file_name)
+
+        elif media_type == 'webpage':
+            media_id = media.webpage.id
+            if isinstance(media.webpage, tl.types.WebPageEmpty):
+                media_type = 'webpageempty'
+            else:
+                file_name = media.webpage.url
+                mediadict['url'] = media.webpage.url
+                mediadict['title'] = media.webpage.title
+                mediadict['site_name'] = media.webpage.site_name
+
+        elif media_type == 'contact':
+            raise NotImplemented
+
+        mediadict['media_id'] = str(media_id)
+        return media_type, mediadict
