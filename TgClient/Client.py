@@ -72,7 +72,7 @@ class Client(TelegramClient):
         contacts_model = []
         for contact, user in self.contacts.values():
             contactdict = {}
-            contactdict['user_id'] = 'User_{}'.format(user.id)
+            contactdict['user_id'] = str(user.id)
             contactdict['name'] = utils.get_display_name(user)
             contacts_model.append(contactdict)
         pyotherside.send('contacts_list', sorted(contacts_model, key=lambda u:u['name']))
@@ -91,10 +91,10 @@ class Client(TelegramClient):
             filename = self.filemanager.get_dialog_photo(entity)
             dialogdict['name'] = utils.get_display_name(entity)
             dialogdict['icon'] = filename
-            dialogdict['entity_id'] = '{}_{}'.format(entity_type, entity.id)
+            dialogdict['entity_id'] = str(entity.id)
 
             # store
-            self.entities[dialogdict['entity_id']] = entity
+            self.entities[entity.id] = entity
             database.add_dialog(entity)
 
             if filename:
@@ -138,18 +138,18 @@ class Client(TelegramClient):
             # check for new chat messages
             for update in update_object.updates:
                 if isinstance(update, tl.types.UpdateNewMessage):
-                    from_id = 'User_{}'.format(update.message.from_id)
+                    from_id = update.message.from_id
                     to_entity = update.message.to_id
                     entity_type = utils.get_entity_type(to_entity)
                     if 'User' in entity_type:
-                        entity_id = 'User_{}'.format(update.message.from_id)
+                        entity_id = update.message.from_id
                     elif 'Chat' in entity_type:
-                        entity_id = 'Chat_{}'.format(update.message.to_id.chat_id)
+                        entity_id = update.message.to_id.chat_id
                     msgdict = self.build_message_dict(update.message, self.get_entity(from_id))
                     pyotherside.send('new_message', entity_id, msgdict)
 
                 elif isinstance(update, tl.types.UpdateNewChannelMessage):
-                    entity_id = 'Channel_{}'.format(update.message.to_id.channel_id)
+                    entity_id = update.message.to_id.channel_id
                     msgdict = self.build_message_dict(update.message, self.get_entity(entity_id))
                     pyotherside.send('new_message', entity_id, msgdict)
 
@@ -160,7 +160,7 @@ class Client(TelegramClient):
 
         elif isinstance(update_object, tl.types.UpdateShortChatMessage):
             # Group
-            entity_id = 'Chat_{}'.format(update_object.chat_id)
+            entity_id = update_object.chat_id
             msgdict = self.build_message_dict(update_object, self.get_entity(entity_id))
             pyotherside.send('new_message', entity_id, msgdict)
 
@@ -168,30 +168,16 @@ class Client(TelegramClient):
     ###  internal functions  ###
     ############################
 
-    def get_entity(self, ID):
-
-        if ID in self.entities:
-            return self.entities[ID]
-
-        entity_type, entity_id = ID.split('_')
-        if entity_type == 'Chat':
-            entity = self.invoke(tl.functions.messages.GetChatsRequest([entity_id,])).chats[0]
-        elif entity_type == 'User':
-            if not self.contacts:
-                self.get_contacts()
-            for contact, user in self.contacts.values():
-                if user.id == entity_id:
-                    return user
-            raise ValueError('Entity user not found {}'.format(entity_id))
-        elif entity_type == 'Channel':
-            raise NotImplementedError
-        else:
-            raise ValueError('Unkown type {}'.format(entity_type))
+    def get_entity(self, entity_id):
+        entity_id = int(entity_id)
+        if entity_id in self.entities:
+            return self.entities[entity_id]
+        raise ValueError('Entity not found: {}'.format(entity_id))
 
     def get_contacts(self):
         r = self.invoke(tl.functions.contacts.GetContactsRequest(self.api_hash))
         for contact, user in zip(r.contacts, r.users):
-            self.contacts['user_{}'.format(user.id)] = contact, user
+            self.contacts[user.id] = contact, user
 
     def build_message_dict(self, msg, sender):
         mdata = {
