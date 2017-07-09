@@ -114,13 +114,42 @@ class Client(TelegramClient):
 
     def request_messages(self, ID):
         entity = self.get_entity(ID)
-        total_count, messages, senders = self.get_message_history(entity)
 
-        # store
-        database.add_messages(entity.id, *messages)
+        # get last message from database
+        last_message = database.get_message_history(ID, limit=1)
 
-        # Iterate over all (in reverse order so the latest appear last)
-        messages_model = [self.build_message_dict(msg, sender) for msg, sender in zip(reversed(messages), reversed(senders))]
+        if not last_message:
+            last_id = 0
+            limit = 20
+        else:
+            last_id = last_message[0][0].id + 1
+            limit = 0
+
+        # check for newer messages from server
+        result = self(tl.functions.messages.GetHistoryRequest(
+            utils.get_input_peer(entity),
+            limit=limit,
+            offset_date=None,
+            offset_id=0,
+            max_id=0,
+            min_id=last_id,
+            add_offset=0,
+        ))
+
+        # get sender (User) for each message
+        senders = [utils.find_user_or_chat(m.from_id, result.users, result.chats)
+                    if m.from_id is not None else
+                    utils.find_user_or_chat(m.to_id, result.users, result.chats)
+                    for m in result.messages]
+        messages = zip(result.messages, senders)
+
+        # add to cache
+        database.add_messages(entity.id, messages)
+
+        # collect latest messages from database
+        messages = database.get_message_history(ID, limit=20)
+        messages = reversed(messages)
+        messages_model = [self.build_message_dict(msg, sender) for msg, sender in messages]
 
         pyotherside.send('update_messages', messages_model)
 
