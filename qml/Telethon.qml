@@ -41,7 +41,7 @@ Python {
         // importNames("TgClient", ["connect", "client"], function () {})
 
         setHandler("log", function(message) {
-            console.log(message)
+            console.log("Python: " + message)
         })
 
         // accept data from Telegram

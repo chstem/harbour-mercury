@@ -151,11 +151,12 @@ Page {
         }
     }
 
-    Component.onCompleted: {
-        backend.clearDialog()
-        backend.fcall('request_dialogs', [])
+    onStatusChanged: {
+        if (status == PageStatus.Activating) {
+            backend.clearDialog()
+            backend.fcall('request_dialogs', [])
+        }
     }
-
 
 }
 
