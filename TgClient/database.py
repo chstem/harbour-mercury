@@ -3,7 +3,7 @@ import pickle
 from .peewee import *
 from telethon import tl
 
-db = SqliteDatabase('cache.db')
+db = SqliteDatabase(None)
 
 class BaseModel(Model):
     class Meta:
@@ -24,49 +24,49 @@ class Message(BaseModel):
     date = DateTimeField()
     blob = BlobField()
 
-# test database connection & create tables if necessary
-db.connect()
-db.create_tables([Dialog, Sender, Message], safe=True)
-db.commit()
+def initialize(dbfile):
+    db.init(dbfile)
+    db.connect()
+    db.create_tables([Dialog, Sender, Message], safe=True)
+    db.commit()
 
-@db.atomic()
 def add_dialog(entity):
-    blob = pickle.dumps(entity)
-    try:
-        dialog = Dialog.get(id=entity.id)
-        dialog.blob = blob
-    except Dialog.DoesNotExist:
-        dialog = Dialog.create(id=entity.id, blob=blob)
-    dialog.save()
+    with db.atomic() as txn:
+        blob = pickle.dumps(entity)
+        try:
+            dialog = Dialog.get(id=entity.id)
+            dialog.blob = blob
+        except Dialog.DoesNotExist:
+            dialog = Dialog.create(id=entity.id, blob=blob)
+        dialog.save()
 
-@db.atomic()
 def get_dialog(entity_id):
-    dialog = Dialog.get(Dialog.id == entity_id)
-    entity = pickle.loads(dialog.blob)
-    return entity
+    with db.atomic() as txn:
+        dialog = Dialog.get(Dialog.id == entity_id)
+        entity = pickle.loads(dialog.blob)
+        return entity
 
-@db.atomic()
 def add_messages(dialog_id, messages):
     """
     messages needs to be a sequence of (message, sender)
     """
-    dialog = Dialog.get(Dialog.id == dialog_id)
-    for message, sender in messages:
-        try:
-            s = Sender.get(id=sender.id)
-        except Sender.DoesNotExist:
-            s = Sender.create(id=sender.id, blob=pickle.dumps(sender))
-            s.save()
-        m = Message.create(
-            id = message.id,
-            date = message.date,
-            dialog = dialog,
-            sender = s,
-            blob = pickle.dumps(message),
-        )
-        m.save()
+    with db.atomic() as txn:
+        dialog = Dialog.get(Dialog.id == dialog_id)
+        for message, sender in messages:
+            try:
+                s = Sender.get(id=sender.id)
+            except Sender.DoesNotExist:
+                s = Sender.create(id=sender.id, blob=pickle.dumps(sender))
+                s.save()
+            m = Message.create(
+                id = message.id,
+                date = message.date,
+                dialog = dialog,
+                sender = s,
+                blob = pickle.dumps(message),
+            )
+            m.save()
 
-@db.atomic()
 def get_message_history(dialog_id, limit=0, max_id=0, min_id=0):
     """
     Gets the message history for the specified entity (dialog_id)
@@ -78,13 +78,14 @@ def get_message_history(dialog_id, limit=0, max_id=0, min_id=0):
 
     :return: list of (message, sender)
     """
-    query = Message.select().join(Dialog).where(Dialog.id == dialog_id)
-    if max_id:
-        query = query.where(Message.id <= max_id)
-    if min_id:
-        query = query.where(Message.id >= min_id)
-    # last message first
-    query = query.order_by(-Message.id)
-    if limit:
-        query = query.limit(limit)
-    return [ (pickle.loads(msg.blob), pickle.loads(msg.sender.blob)) for msg in query ]
+    with db.atomic() as txn:
+        query = Message.select().join(Dialog).where(Dialog.id == dialog_id)
+        if max_id:
+            query = query.where(Message.id <= max_id)
+        if min_id:
+            query = query.where(Message.id >= min_id)
+        # last message first
+        query = query.order_by(-Message.id)
+        if limit:
+            query = query.limit(limit)
+        return [ (pickle.loads(msg.blob), pickle.loads(msg.sender.blob)) for msg in query ]

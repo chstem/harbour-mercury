@@ -31,6 +31,9 @@ class Client(TelegramClient):
         self.filemanager = FileManager(self, settings)
         self.entities = {}
         self.contacts = {}
+        #database.initialize('cache.db')
+        database.initialize('{}.db'.format(session_user_id))
+        #database.initialize(':memory:')
 
     ###############
     ###  login  ###
