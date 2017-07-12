@@ -44,9 +44,16 @@ Page {
                 title: currentDialog.title
             }
 
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                id: button
+                text : "load more"
+                onClicked: backend.fcall('request_messages', [currentDialog.entityID, dialogModel.get(0).id])
+            }
+
             SilicaListView {
                 id: messagesView
-                height: page.height - header.height - (2*Theme.paddingLarge)
+                height: page.height - header.height - button.height - (3*Theme.paddingLarge)
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right

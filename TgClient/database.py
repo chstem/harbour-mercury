@@ -1,7 +1,5 @@
-import os
 import pickle
 from .peewee import *
-from telethon import tl
 
 db = SqliteDatabase(None)
 
@@ -84,8 +82,27 @@ def get_message_history(dialog_id, limit=0, max_id=0, min_id=0):
             query = query.where(Message.id <= max_id)
         if min_id:
             query = query.where(Message.id >= min_id)
-        # last message first
         query = query.order_by(-Message.id)
         if limit:
             query = query.limit(limit)
-        return [ (pickle.loads(msg.blob), pickle.loads(msg.sender.blob)) for msg in query ]
+        return reversed([ (pickle.loads(msg.blob), pickle.loads(msg.sender.blob)) for msg in query ])
+
+def get_last_message(dialog_id):
+    """get newest message_id (highest id) cached for dialog_id"""
+    with db.atomic() as txn:
+        query = Message.select().join(Dialog).where(Dialog.id == dialog_id)
+        query = query.order_by(-Message.id).first()
+        if query:
+            return query.id
+        else:
+            return 0
+
+def get_first_message(dialog_id):
+    """get oldest message_id (lowest id) cached for dialog_id"""
+    with db.atomic() as txn:
+        query = Message.select().join(Dialog).where(Dialog.id == dialog_id)
+        query = query.order_by(Message.id).first()
+        if query:
+            return query.id
+        else:
+            return 0

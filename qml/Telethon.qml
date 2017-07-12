@@ -52,17 +52,18 @@ Python {
             }
         })
 
-        setHandler("update_messages", function(messages) {
-            dialogModel.clear()
-            for (var i=0; i<messages.length; i++) {
-                dialogModel.append(messages[i])
-            }
-            pageStack.currentPage.jumpToBottom()
-        })
-
-        setHandler("new_message", function(entityID, message) {
-            if (currentDialog.entityID === entityID) {
-                dialogModel.append(message)
+        setHandler("update_messages", function(entityID, messages) {
+            if (currentDialog.entityID !== entityID) return
+            if ((dialogModel.count > 0) && (messages[messages.length-1].id < dialogModel.get(0).id)) {
+                // prepend
+                for (var i=0; i<messages.length; i++) {
+                    dialogModel.insert(i,  messages[i])
+                }
+            } else {
+                // append
+                for (var i=0; i<messages.length; i++) {
+                    dialogModel.append(messages[i])
+                }
                 pageStack.currentPage.jumpToBottom()
             }
         })

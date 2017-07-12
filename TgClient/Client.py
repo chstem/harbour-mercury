@@ -31,8 +31,8 @@ class Client(TelegramClient):
         self.filemanager = FileManager(self, settings)
         self.entities = {}
         self.contacts = {}
-        #database.initialize('cache.db')
-        database.initialize('{}.db'.format(session_user_id))
+        database.initialize('cache.db')
+        #database.initialize('{}.db'.format(session_user_id))
         #database.initialize(':memory:')
 
     ###############
@@ -115,46 +115,42 @@ class Client(TelegramClient):
             self.filemanager.download_dialog_photo(chat, filename)
         pyotherside.send('log', 'all chat icons downloaded')
 
-    def request_messages(self, ID):
-        entity = self.get_entity(ID)
+    def request_messages(self, entity_id, last_id=0, count=20):
+        entity = self.get_entity(entity_id)
+        last_id = int(last_id)
 
-        # get last message from database
-        last_message = database.get_message_history(ID, limit=1)
+        if not last_id:
+            # initial loading, check for new messages first:
 
-        if not last_message:
-            last_id = 0
-            limit = 20
+            # get last message from database
+            last_message_id = database.get_last_message(entity_id)
+            if not last_message_id:
+                limit = count
+            else:
+                # load everything missing
+                last_id = last_message_id + 1
+                limit = 0
+
+            # check for newer messages from server
+            self.download_messages(entity, limit, min_id=last_id)
+
+            # collect latest messages from cache
+            messages = database.get_message_history(entity_id, limit=count)
+            messages_model = [self.build_message_dict(msg, sender) for msg, sender in messages]
+
         else:
-            last_id = last_message[0][0].id + 1
-            limit = 0
+            # check oldest messages in cache
+            first_message_id = database.get_first_message(entity_id)
 
-        # check for newer messages from server
-        result = self(tl.functions.messages.GetHistoryRequest(
-            utils.get_input_peer(entity),
-            limit=limit,
-            offset_date=None,
-            offset_id=0,
-            max_id=0,
-            min_id=last_id,
-            add_offset=0,
-        ))
+            # load even older messages from server
+            if first_message_id >= last_id:
+                self.download_messages(entity, limit=count, offset_id=first_message_id)
 
-        # get sender (User) for each message
-        senders = [utils.find_user_or_chat(m.from_id, result.users, result.chats)
-                    if m.from_id is not None else
-                    utils.find_user_or_chat(m.to_id, result.users, result.chats)
-                    for m in result.messages]
-        messages = zip(result.messages, senders)
+            # collect requested messages from cache
+            messages = database.get_message_history(entity_id, limit=count, max_id=last_id-1)
+            messages_model = [self.build_message_dict(msg, sender) for msg, sender in messages]
 
-        # add to cache
-        database.add_messages(entity.id, messages)
-
-        # collect latest messages from database
-        messages = database.get_message_history(ID, limit=20)
-        messages = reversed(messages)
-        messages_model = [self.build_message_dict(msg, sender) for msg, sender in messages]
-
-        pyotherside.send('update_messages', messages_model)
+        pyotherside.send('update_messages', entity_id, messages_model)
 
     def download(self, media_id):
         self.filemanager.download_media(media_id)
@@ -177,13 +173,17 @@ class Client(TelegramClient):
                         entity_id = update.message.from_id
                     elif 'Chat' in entity_type:
                         entity_id = update.message.to_id.chat_id
-                    msgdict = self.build_message_dict(update.message, self.get_entity(from_id))
-                    pyotherside.send('new_message', entity_id, msgdict)
+                    sender = self.get_entity(from_id)
+                    database.add_messages(entity_id, [(update.message, sender),])
+                    msgdict = self.build_message_dict(update.message, sender)
+                    pyotherside.send('update_messages', str(entity_id), [msgdict,])
 
                 elif isinstance(update, tl.types.UpdateNewChannelMessage):
                     entity_id = update.message.to_id.channel_id
-                    msgdict = self.build_message_dict(update.message, self.get_entity(entity_id))
-                    pyotherside.send('new_message', entity_id, msgdict)
+                    sender = self.get_entity(entity_id)
+                    database.add_messages(entity_id, [(update.message, sender),])
+                    msgdict = self.build_message_dict(update.message, sender)
+                    pyotherside.send('update_messages', str(entity_id), [msgdict,])
 
                 elif isinstance(update, tl.types.UpdateReadHistoryOutbox) or \
                         isinstance(update, tl.types.UpdateReadHistoryInbox) or \
@@ -211,6 +211,28 @@ class Client(TelegramClient):
         for contact, user in zip(r.contacts, r.users):
             self.contacts[user.id] = contact, user
 
+    def download_messages(self, entity, limit=20, offset_id=0, max_id=0, min_id=0):
+        """download messages from Telegram server"""
+        result = self.invoke(tl.functions.messages.GetHistoryRequest(
+            utils.get_input_peer(entity),
+            limit=limit,
+            offset_date=None,
+            offset_id=offset_id,
+            max_id=max_id,
+            min_id=min_id,
+            add_offset=0,
+        ))
+
+        # get sender (User) for each message
+        senders = [utils.find_user_or_chat(m.from_id, result.users, result.chats)
+                    if m.from_id is not None else
+                    utils.find_user_or_chat(m.to_id, result.users, result.chats)
+                    for m in result.messages]
+        messages = zip(result.messages, senders)
+
+        # add to cache
+        database.add_messages(entity.id, messages)
+
     def build_message_dict(self, msg, sender):
         mdata = {
             'name' : utils.get_display_name(sender),
@@ -218,6 +240,7 @@ class Client(TelegramClient):
             'downloaded' : 0.0,
         }
         msgdict = {
+            'id' : str(msg.id),
             'type' : '',
             'mdata' : mdata,
             }
