@@ -113,7 +113,7 @@ class Client(TelegramClient):
         # start downloads
         for chat, filename in download_queue:
             self.filemanager.download_dialog_photo(chat, filename)
-        pyotherside.send('log', 'all chat icons downloaded')
+        #pyotherside.send('log', 'all chat icons downloaded')
 
     def request_messages(self, entity_id, last_id=0, count=20):
         entity = self.get_entity(entity_id)
@@ -190,11 +190,21 @@ class Client(TelegramClient):
                         isinstance(update, tl.types.UpdateReadChannelInbox):
                     self.request_dialogs()
 
+        elif isinstance(update_object, tl.types.UpdateShortMessage):
+            # Chat
+            entity_id = update_object.user_id
+            sender = self.get_entity(entity_id)
+            database.add_messages(entity_id, [(update_object, sender),])
+            msgdict = self.build_message_dict(update_object, sender)
+            pyotherside.send('update_messages', str(entity_id), [msgdict,])
+
         elif isinstance(update_object, tl.types.UpdateShortChatMessage):
             # Group
             entity_id = update_object.chat_id
-            msgdict = self.build_message_dict(update_object, self.get_entity(entity_id))
-            pyotherside.send('new_message', entity_id, msgdict)
+            sender = self.get_entity(update_object.from_id)
+            database.add_messages(entity_id, [(update_object, sender),])
+            msgdict = self.build_message_dict(update_object, sender)
+            pyotherside.send('update_messages', str(entity_id), [msgdict,])
 
     ############################
     ###  internal functions  ###
