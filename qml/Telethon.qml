@@ -52,7 +52,7 @@ Python {
             }
         })
 
-        setHandler("update_messages", function(entityID, messages) {
+        setHandler("new_messages", function(entityID, messages) {
             if (currentDialog.entityID !== entityID) return
             if ((dialogModel.count > 0) && (messages[messages.length-1].id < dialogModel.get(0).id)) {
                 // prepend
@@ -65,6 +65,26 @@ Python {
                     dialogModel.append(messages[i])
                 }
                 pageStack.currentPage.jumpToBottom()
+            }
+        })
+
+        setHandler("update_message", function(message) {
+            for (var i=0; i<dialogModel.count; i++) {
+                if (dialogModel.get(i).id === message.id) {
+                    dialogModel.set(i, message)
+                    break
+                }
+            }
+        })
+
+        setHandler("delete_messages", function(messages_ids) {
+            for (var imsg=0; imsg<messages_ids.length; imsg++) {
+                for (var imodel=0; imodel<dialogModel.count; imodel++) {
+                    if (dialogModel.get(imodel).id === messages_ids[imsg]) {
+                        dialogModel.remove(imodel)
+                        break
+                    }
+                }
             }
         })
 

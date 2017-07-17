@@ -150,7 +150,7 @@ class Client(TelegramClient):
             messages = database.get_message_history(entity_id, limit=count, max_id=last_id-1)
             messages_model = [self.build_message_dict(msg, sender) for msg, sender in messages]
 
-        pyotherside.send('update_messages', entity_id, messages_model)
+        pyotherside.send('new_messages', entity_id, messages_model)
 
     def download(self, media_id):
         self.filemanager.download_media(media_id)
@@ -163,7 +163,6 @@ class Client(TelegramClient):
 
         if isinstance(update_object, tl.types.UpdatesTg):
 
-            # check for new chat messages
             for update in update_object.updates:
                 if isinstance(update, tl.types.UpdateNewMessage):
                     from_id = update.message.from_id
@@ -176,14 +175,24 @@ class Client(TelegramClient):
                     sender = self.get_entity(from_id)
                     database.add_messages(entity_id, [(update.message, sender),])
                     msgdict = self.build_message_dict(update.message, sender)
-                    pyotherside.send('update_messages', str(entity_id), [msgdict,])
+                    pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
                 elif isinstance(update, tl.types.UpdateNewChannelMessage):
                     entity_id = update.message.to_id.channel_id
                     sender = self.get_entity(entity_id)
                     database.add_messages(entity_id, [(update.message, sender),])
                     msgdict = self.build_message_dict(update.message, sender)
-                    pyotherside.send('update_messages', str(entity_id), [msgdict,])
+                    pyotherside.send('new_messages', str(entity_id), [msgdict,])
+
+                elif isinstance(update, tl.types.UpdateEditMessage):
+                    sender = database.get_message_sender(update.message.id)
+                    msgdict = self.build_message_dict(update.message, sender)
+                    database.update_message(update.message)
+                    pyotherside.send('update_message', msgdict)
+
+                elif isinstance(update, tl.types.UpdateDeleteMessages):
+                    database.delete_messages(update.messages)
+                    pyotherside.send('delete_messages', map(str, update.messages))
 
                 elif isinstance(update, tl.types.UpdateReadHistoryOutbox) or \
                         isinstance(update, tl.types.UpdateReadHistoryInbox) or \
@@ -196,7 +205,7 @@ class Client(TelegramClient):
             sender = self.get_entity(entity_id)
             database.add_messages(entity_id, [(update_object, sender),])
             msgdict = self.build_message_dict(update_object, sender)
-            pyotherside.send('update_messages', str(entity_id), [msgdict,])
+            pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
         elif isinstance(update_object, tl.types.UpdateShortChatMessage):
             # Group
@@ -204,7 +213,7 @@ class Client(TelegramClient):
             sender = self.get_entity(update_object.from_id)
             database.add_messages(entity_id, [(update_object, sender),])
             msgdict = self.build_message_dict(update_object, sender)
-            pyotherside.send('update_messages', str(entity_id), [msgdict,])
+            pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
     ############################
     ###  internal functions  ###

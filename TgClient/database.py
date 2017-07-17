@@ -29,8 +29,8 @@ def initialize(dbfile):
     db.commit()
 
 def add_dialog(entity):
+    blob = pickle.dumps(entity)
     with db.atomic() as txn:
-        blob = pickle.dumps(entity)
         try:
             dialog = Dialog.get(id=entity.id)
             dialog.blob = blob
@@ -64,6 +64,31 @@ def add_messages(dialog_id, messages):
                 blob = pickle.dumps(message),
             )
             m.save()
+
+def get_message(message_id):
+    with db.atomic() as txn:
+        msg = Message.get(id=message_id)
+        return pickle.loads(msg.blob)
+
+def get_message_sender(message_id):
+    with db.atomic() as txn:
+        msg = Message.get(id=message_id)
+        sender = pickle.loads(msg.sender.blob)
+        return sender
+
+def update_message(message):
+    blob = pickle.dumps(message)
+    with db.atomic() as txn:
+        try:
+            msg = Message.get(id=message.id)
+            msg.blob = blob
+        except Message.DoesNotExist:
+            msg = Message.create(id=message.id, blob=blob)
+        msg.save()
+
+def delete_messages(message_ids):
+    with db.atomic() as txn:
+        Message.delete().where(Message.id << message_ids).execute()
 
 def get_message_history(dialog_id, limit=0, max_id=0, min_id=0):
     """
