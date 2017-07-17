@@ -29,7 +29,6 @@ class Client(TelegramClient):
         super().__init__(session_user_id, api_id, api_hash, proxy)
         self.settings = settings
         self.filemanager = FileManager(self, settings)
-        self.entities = {}
         self.contacts = {}
         database.initialize('cache.db')
         #database.initialize('{}.db'.format(session_user_id))
@@ -97,7 +96,6 @@ class Client(TelegramClient):
             dialogdict['entity_id'] = str(entity.id)
 
             # store
-            self.entities[entity.id] = entity
             database.add_dialog(entity)
 
             if filename:
@@ -116,7 +114,7 @@ class Client(TelegramClient):
         #pyotherside.send('log', 'all chat icons downloaded')
 
     def request_messages(self, entity_id, last_id=0, count=20):
-        entity = self.get_entity(entity_id)
+        entity = self.get_entity(int(entity_id))
         last_id = int(last_id)
 
         if not last_id:
@@ -172,14 +170,14 @@ class Client(TelegramClient):
                         entity_id = update.message.from_id
                     elif 'Chat' in entity_type:
                         entity_id = update.message.to_id.chat_id
-                    sender = self.get_entity(from_id)
+                    sender = self.get_sender(from_id)
                     database.add_messages(entity_id, [(update.message, sender),])
                     msgdict = self.build_message_dict(update.message, sender)
                     pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
                 elif isinstance(update, tl.types.UpdateNewChannelMessage):
                     entity_id = update.message.to_id.channel_id
-                    sender = self.get_entity(entity_id)
+                    sender = self.get_sender(entity_id)
                     database.add_messages(entity_id, [(update.message, sender),])
                     msgdict = self.build_message_dict(update.message, sender)
                     pyotherside.send('new_messages', str(entity_id), [msgdict,])
@@ -202,7 +200,7 @@ class Client(TelegramClient):
         elif isinstance(update_object, tl.types.UpdateShortMessage):
             # Chat
             entity_id = update_object.user_id
-            sender = self.get_entity(entity_id)
+            sender = self.get_sender(entity_id)
             database.add_messages(entity_id, [(update_object, sender),])
             msgdict = self.build_message_dict(update_object, sender)
             pyotherside.send('new_messages', str(entity_id), [msgdict,])
@@ -210,7 +208,7 @@ class Client(TelegramClient):
         elif isinstance(update_object, tl.types.UpdateShortChatMessage):
             # Group
             entity_id = update_object.chat_id
-            sender = self.get_entity(update_object.from_id)
+            sender = self.get_sender(update_object.from_id)
             database.add_messages(entity_id, [(update_object, sender),])
             msgdict = self.build_message_dict(update_object, sender)
             pyotherside.send('new_messages', str(entity_id), [msgdict,])
@@ -220,10 +218,17 @@ class Client(TelegramClient):
     ############################
 
     def get_entity(self, entity_id):
-        entity_id = int(entity_id)
-        if entity_id in self.entities:
-            return self.entities[entity_id]
-        raise ValueError('Entity not found: {}'.format(entity_id))
+        entity = database.get_dialog(entity_id)
+        if not entity:
+            r = self.invoke(tl.functions.messages.GetChatsRequest(id=[entity_id,]))
+            entity = r.chats[0]
+        return entity
+
+    def get_sender(self, sender_id):
+        sender = database.get_sender(sender_id)
+        if not sender:
+            pyotherside.send('log', 'Sender {} not found'.format(sender_id))
+        return sender
 
     def get_contacts(self):
         r = self.invoke(tl.functions.contacts.GetContactsRequest(self.api_hash))

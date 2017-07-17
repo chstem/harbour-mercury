@@ -40,9 +40,21 @@ def add_dialog(entity):
 
 def get_dialog(entity_id):
     with db.atomic() as txn:
-        dialog = Dialog.get(Dialog.id == entity_id)
-        entity = pickle.loads(dialog.blob)
-        return entity
+        try:
+            dialog = Dialog.get(Dialog.id == entity_id)
+            entity = pickle.loads(dialog.blob)
+            return entity
+        except Dialog.DoesNotExist:
+            return None
+
+def get_sender(sender_id):
+    with db.atomic() as txn:
+        try:
+            sender= Sender.get(Sender.id == sender_id)
+            sender = pickle.loads(sender.blob)
+            return sender
+        except Sender.DoesNotExist:
+            return None
 
 def add_messages(dialog_id, messages):
     """
