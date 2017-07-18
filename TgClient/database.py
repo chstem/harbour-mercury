@@ -47,6 +47,16 @@ def get_dialog(entity_id):
         except Dialog.DoesNotExist:
             return None
 
+def add_sender(sender):
+    blob = pickle.dumps(sender)
+    with db.atomic() as txn:
+        try:
+            s = Sender.get(id=sender.id)
+            s.blob = blob
+        except Dialog.DoesNotExist:
+            s = Sender.create(id=sender.id, blob=blob)
+        s.save()
+
 def get_sender(sender_id):
     with db.atomic() as txn:
         try:
@@ -55,6 +65,14 @@ def get_sender(sender_id):
             return sender
         except Sender.DoesNotExist:
             return None
+
+def get_self():
+    with db.atomic() as txn:
+        for sender in Sender.select():
+            s = pickle.loads(sender.blob)
+            if s.is_self:
+                return s
+    return None
 
 def add_messages(dialog_id, messages):
     """

@@ -30,6 +30,7 @@ class Client(TelegramClient):
         self.settings = settings
         self.filemanager = FileManager(self, settings)
         self.contacts = {}
+        self.user = None
         database.initialize('cache.db')
         #database.initialize('{}.db'.format(session_user_id))
         #database.initialize(':memory:')
@@ -53,6 +54,8 @@ class Client(TelegramClient):
         if not status:
             return 'invalid'
         if isinstance(status, tl.types.User):
+            self.user = status
+            database.add_sender(self.user)
             return True
         raise ValueError('Unkown return status for sign_in')
 
@@ -200,7 +203,10 @@ class Client(TelegramClient):
         elif isinstance(update_object, tl.types.UpdateShortMessage):
             # Chat
             entity_id = update_object.user_id
-            sender = self.get_sender(entity_id)
+            if update_object.out:
+                sender = self.get_sender('self')
+            else:
+                sender = self.get_sender(entity_id)
             database.add_messages(entity_id, [(update_object, sender),])
             msgdict = self.build_message_dict(update_object, sender)
             pyotherside.send('new_messages', str(entity_id), [msgdict,])
@@ -225,6 +231,15 @@ class Client(TelegramClient):
         return entity
 
     def get_sender(self, sender_id):
+        if sender_id == 'self':
+            if not self.user:
+                self.user = database.get_self()
+            if not self.user:
+                inputuser = tl.types.InputUserSelf()
+                r = client.invoke(tl.functions.users.GetUsersRequest((inputuser,)))
+                self.user = r[0]
+                database.add_sender(self.user)
+            return self.user
         sender = database.get_sender(sender_id)
         if not sender:
             pyotherside.send('log', 'Sender {} not found'.format(sender_id))
