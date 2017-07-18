@@ -10,15 +10,18 @@ class FileManager:
     def __init__(self, client, settings):
         self.client = client
         self.settings = settings
+        self.media = {}
 
     def get_msg_media(self, media):
         media_type = utils.get_media_type(media)
 
         if media_type == 'photo':
             file_name = self.get_photo_path(media)
+            self.media[media.photo.id] = media
 
         elif media_type == 'document':
             file_name = self.get_document_path(media)
+            self.media[media.document.id] = media
 
         elif media_type == 'contact':
             raise NotImplemented
@@ -69,7 +72,7 @@ class FileManager:
         pyotherside.send('icon', entity_id, filename)
 
     def download_media(self, media_id):
-        media = self.media[media_id]
+        media = self.media[int(media_id)]
         media_type = utils.get_media_type(media)
         if media_type == 'photo':
             file_name = self.get_photo_path(media)
