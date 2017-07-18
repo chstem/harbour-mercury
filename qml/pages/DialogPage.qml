@@ -48,7 +48,7 @@ Page {
                 anchors.horizontalCenter: parent.horizontalCenter
                 id: button
                 text : "load more"
-                onClicked: backend.fcall('request_messages', [currentDialog.entityID, dialogModel.get(0).id])
+                onClicked: backend.fcall('request_messages', [currentDialog.entityID, dialogModel.get(dialogModel.count-1).id])
             }
 
             SilicaListView {
@@ -58,6 +58,7 @@ Page {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 spacing: Theme.paddingLarge
+                verticalLayoutDirection: ListView.BottomToTop
                 model: dialogModel
                 delegate: ListItem {
                     id: delegate
@@ -78,10 +79,6 @@ Page {
 
     Component.onCompleted: {
         backend.fcall('request_messages', [currentDialog.entityID])
-    }
-
-    function jumpToBottom() {
-        messagesView.positionViewAtEnd()
     }
 
 }

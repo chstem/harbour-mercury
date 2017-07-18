@@ -55,16 +55,15 @@ Python {
         setHandler("new_messages", function(entityID, messages) {
             if (currentDialog.entityID !== entityID) return
             if ((dialogModel.count > 0) && (messages[messages.length-1].id < dialogModel.get(0).id)) {
-                // prepend
-                for (var i=0; i<messages.length; i++) {
-                    dialogModel.insert(i,  messages[i])
-                }
-            } else {
                 // append
                 for (var i=0; i<messages.length; i++) {
                     dialogModel.append(messages[i])
                 }
-                pageStack.currentPage.jumpToBottom()
+            } else {
+                // prepend
+                for (var i=0; i<messages.length; i++) {
+                    dialogModel.insert(i,  messages[i])
+                }
             }
         })
 

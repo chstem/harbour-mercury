@@ -122,7 +122,7 @@ def get_message_history(dialog_id, limit=0, max_id=0, min_id=0):
         query = query.order_by(-Message.id)
         if limit:
             query = query.limit(limit)
-        return reversed([ (pickle.loads(msg.blob), pickle.loads(msg.sender.blob)) for msg in query ])
+        return [(pickle.loads(msg.blob), pickle.loads(msg.sender.blob)) for msg in query]
 
 def get_last_message(dialog_id):
     """get newest message_id (highest id) cached for dialog_id"""
