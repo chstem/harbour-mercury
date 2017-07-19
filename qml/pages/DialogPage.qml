@@ -44,16 +44,9 @@ Page {
                 title: currentDialog.title
             }
 
-            Button {
-                anchors.horizontalCenter: parent.horizontalCenter
-                id: button
-                text : "load more"
-                onClicked: backend.fcall('request_messages', [currentDialog.entityID, dialogModel.get(dialogModel.count-1).id])
-            }
-
             SilicaListView {
                 id: messagesView
-                height: page.height - header.height - button.height - (3*Theme.paddingLarge)
+                height: page.height - header.height - (2*Theme.paddingLarge)
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right
@@ -73,8 +66,19 @@ Page {
                     }
                 }
                 VerticalScrollDecorator { flickable: messagesView }
+                onContentYChanged: {
+                    if (dialogModel.count > 0 && !requestTimer.running && (indexAt(0, contentY) - dialogModel.count < 10)) {
+                        requestTimer.start
+                        backend.fcall('request_messages', [currentDialog.entityID, dialogModel.get(dialogModel.count-1).id])
+                    }
+                }
             }
         }
+    }
+
+    Timer {
+        id: requestTimer
+        interval: 500
     }
 
     Component.onCompleted: {

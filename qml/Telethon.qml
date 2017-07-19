@@ -54,15 +54,24 @@ Python {
 
         setHandler("new_messages", function(entityID, messages) {
             if (currentDialog.entityID !== entityID) return
-            if ((dialogModel.count > 0) && (messages[messages.length-1].id < dialogModel.get(0).id)) {
-                // append
-                for (var i=0; i<messages.length; i++) {
-                    dialogModel.append(messages[i])
+            // merge new messages into dialogModel
+            var imdl=0
+            for (var imsg=0; imsg<messages.length; imsg++) {
+                // append if imdl exceeds current count
+                if (imdl >= dialogModel.count) {
+                    dialogModel.append(messages[imsg])
+                    continue
                 }
-            } else {
-                // prepend
-                for (var i=0; i<messages.length; i++) {
-                    dialogModel.insert(i,  messages[i])
+                // find next position
+                while (dialogModel.get(imdl).id > messages[imsg].id) {
+                    imdl++
+                    if (imdl >= dialogModel.count) break
+                }
+                if (imdl >= dialogModel.count) continue
+                if (dialogModel.get(imdl).id === messages[imsg].id) {
+                    dialogModel.set(imdl, messages[imsg])
+                } else {
+                    dialogModel.insert(imdl, messages[imsg])
                 }
             }
         })
