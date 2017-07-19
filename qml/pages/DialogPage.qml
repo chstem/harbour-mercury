@@ -67,8 +67,8 @@ Page {
                 }
                 VerticalScrollDecorator { flickable: messagesView }
                 onContentYChanged: {
-                    if (dialogModel.count > 0 && !requestTimer.running && (indexAt(0, contentY) - dialogModel.count < 10)) {
-                        requestTimer.start
+                    if (dialogModel.count > 0 && !requestTimer.running && (dialogModel.count - indexAt(0, contentY) < 10)) {
+                        requestTimer.start()
                         backend.fcall('request_messages', [currentDialog.entityID, dialogModel.get(dialogModel.count-1).id])
                     }
                 }

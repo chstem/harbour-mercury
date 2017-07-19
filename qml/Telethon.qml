@@ -67,7 +67,10 @@ Python {
                     imdl++
                     if (imdl >= dialogModel.count) break
                 }
-                if (imdl >= dialogModel.count) continue
+                if (imdl >= dialogModel.count) {
+                    dialogModel.append(messages[imsg])
+                    continue
+                }
                 if (dialogModel.get(imdl).id === messages[imsg].id) {
                     dialogModel.set(imdl, messages[imsg])
                 } else {
