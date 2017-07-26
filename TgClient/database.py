@@ -60,11 +60,17 @@ def add_sender(sender):
 def get_sender(sender_id):
     with db.atomic() as txn:
         try:
-            sender= Sender.get(Sender.id == sender_id)
-            sender = pickle.loads(sender.blob)
-            return sender
+            sender = Sender.get(Sender.id == sender_id)
         except Sender.DoesNotExist:
-            return None
+            sender = None
+        if not sender:
+            try:
+                sender = Dialog.get(Dialog.id == sender_id)
+            except Sender.DoesNotExist:
+                sender = None
+    if sender:
+        return pickle.loads(sender.blob)
+    return None
 
 def get_self():
     with db.atomic() as txn:
