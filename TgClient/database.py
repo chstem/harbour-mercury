@@ -1,7 +1,7 @@
 import pickle
 from .peewee import *
 
-db = SqliteDatabase(None)
+db = SqliteDatabase(None, threadlocals=False, check_same_thread=False)
 
 class BaseModel(Model):
     class Meta:
