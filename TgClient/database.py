@@ -126,6 +126,10 @@ def delete_messages(message_ids):
     with db.atomic() as txn:
         Message.delete().where(Message.id << message_ids).execute()
 
+def messages_count(dialog_id):
+    with db.atomic() as txn:
+        return Message.select().join(Dialog).where(Dialog.id == dialog_id).count()
+
 def get_message_history(dialog_id, limit=0, max_id=0, min_id=0):
     """
     Gets the message history for the specified entity (dialog_id)

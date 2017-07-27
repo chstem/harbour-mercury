@@ -121,25 +121,27 @@ class Client(TelegramClient):
         last_id = int(last_id)
 
         if not last_id:
-            # initial loading, check for new messages first:
+            # initial loading
+            # check for older messages (if less than <count> cached)
+            if database.messages_count(entity_id) < count:
+                first_message_id = database.get_first_message(entity_id)
+                self.download_messages(entity, limit=count, offset_id=first_message_id)
 
+            # check for newer messages than chached
             # get last message from database
             last_message_id = database.get_last_message(entity_id)
             if not last_message_id:
-                limit = count
+                # nothing cached yet
+                self.download_messages(entity, limit=count, min_id=last_id)
             else:
                 # load everything missing
-                last_id = last_message_id + 1
-                limit = 0
-
-            # check for newer messages from server
-            self.download_messages(entity, limit, min_id=last_id)
+                self.download_messages(entity, limit=0, min_id=last_message_id+1)
 
             # collect latest messages from cache
             messages = database.get_message_history(entity_id, limit=count)
-            messages_model = [self.build_message_dict(msg, sender) for msg, sender in messages]
 
         else:
+            # load older messages
             # check oldest messages in cache
             first_message_id = database.get_first_message(entity_id)
 
@@ -149,8 +151,8 @@ class Client(TelegramClient):
 
             # collect requested messages from cache
             messages = database.get_message_history(entity_id, limit=count, max_id=last_id-1)
-            messages_model = [self.build_message_dict(msg, sender) for msg, sender in messages]
 
+        messages_model = [self.build_message_dict(msg, sender) for msg, sender in messages]
         pyotherside.send('new_messages', entity_id, messages_model)
 
     def download(self, media_id):
@@ -252,25 +254,33 @@ class Client(TelegramClient):
 
     def download_messages(self, entity, limit=20, offset_id=0, max_id=0, min_id=0):
         """download messages from Telegram server"""
-        result = self.invoke(tl.functions.messages.GetHistoryRequest(
-            utils.get_input_peer(entity),
-            limit=limit,
-            offset_date=None,
-            offset_id=offset_id,
-            max_id=max_id,
-            min_id=min_id,
-            add_offset=0,
-        ))
+        while 1:
+            result = self.invoke(tl.functions.messages.GetHistoryRequest(
+                utils.get_input_peer(entity),
+                limit=limit,
+                offset_date=None,
+                offset_id=offset_id,
+                max_id=max_id,
+                min_id=min_id,
+                add_offset=0,
+            ))
 
-        # get sender (User) for each message
-        senders = [utils.find_user_or_chat(m.from_id, result.users, result.chats)
-                    if m.from_id is not None else
-                    utils.find_user_or_chat(m.to_id, result.users, result.chats)
-                    for m in result.messages]
-        messages = zip(result.messages, senders)
+            # get sender (User) for each message
+            senders = [utils.find_user_or_chat(m.from_id, result.users, result.chats)
+                        if m.from_id is not None else
+                        utils.find_user_or_chat(m.to_id, result.users, result.chats)
+                        for m in result.messages]
+            messages = zip(result.messages, senders)
 
-        # add to cache
-        database.add_messages(entity.id, messages)
+            # add to cache
+            database.add_messages(entity.id, messages)
+
+            # check exit conditions
+            if limit or len(result.messages) == 0:
+                break
+            else:
+                # continue to check for more chunks
+                offset_id = result.messages[-1].id
 
     def build_message_dict(self, msg, sender):
         mdata = {
