@@ -238,9 +238,10 @@ class Client(TelegramClient):
                 self.user = database.get_self()
             if not self.user:
                 inputuser = tl.types.InputUserSelf()
-                r = client.invoke(tl.functions.users.GetUsersRequest((inputuser,)))
+                r = self.invoke(tl.functions.users.GetUsersRequest((inputuser,)))
                 self.user = r[0]
                 database.add_sender(self.user)
+                database.add_meta(self_id=self.user.id)
             return self.user
         sender = database.get_sender(sender_id)
         if not sender:

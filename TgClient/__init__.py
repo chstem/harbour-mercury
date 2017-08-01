@@ -70,6 +70,7 @@ def connect():
         return 'enter_number'
 
     client.add_update_handler(client.update_handler)
+    client.get_sender('self')   # cache self user
 
     return True
 
