@@ -40,10 +40,15 @@ def initialize(dbfile):
 ###  Meta Data  ###
 ###################
 
-def add_meta(**kwargs):
+def set_meta(**kwargs):
     with db.atomic() as txn:
         for key, value in kwargs.items():
-            Meta.get_or_create(key=key, value=value)
+            try:
+                m = Meta.get(key=key)
+            except Meta.DoesNotExist:
+                m = Meta.create(key=key)
+            m.value = value
+            m.save()
 
 def get_meta(*keys):
     if not keys:
@@ -95,7 +100,7 @@ def get_sender(sender_id):
     if not sender:
         try:
             sender = Dialog.get(Dialog.id == sender_id)
-        except Sender.DoesNotExist:
+        except Dialog.DoesNotExist:
             sender = None
     if sender:
         return pickle.loads(sender.blob)
@@ -127,14 +132,20 @@ def add_messages(dialog_id, messages):
             except Sender.DoesNotExist:
                 s = Sender.create(id=sender.id, blob=pickle.dumps(sender))
                 s.save()
-            m = Message.create(
-                id = message.id,
-                date = message.date,
-                dialog = dialog,
-                sender = s,
-                blob = pickle.dumps(message),
-            )
-            m.save()
+            try:
+                m = Message.create(
+                    id = message.id,
+                    date = message.date,
+                    dialog = dialog,
+                    sender = s,
+                    blob = pickle.dumps(message),
+                )
+                m.save()
+            except IntegrityError:
+                if Message.get(Message.id == message.id):
+                    raise ValueError("Message with id {} already exists".format(message.id))
+                else:
+                    raise
 
 def get_message(message_id):
     msg = Message.get(id=message_id)
@@ -152,7 +163,7 @@ def update_message(message):
             msg = Message.get(id=message.id)
             msg.blob = blob
         except Message.DoesNotExist:
-            msg = Message.create(id=message.id, blob=blob)
+            raise ValueError("Message with id {} does not exist".format(message.id))
         msg.save()
 
 def delete_messages(message_ids):

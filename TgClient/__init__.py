@@ -71,6 +71,7 @@ def connect():
 
     client.add_update_handler(client.update_handler)
     client.get_sender('self')   # cache self user
+    client.get_updates()
 
     return True
 

@@ -15,6 +15,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Mercury. If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import datetime
 import os
 import pyotherside
 from telethon import *
@@ -158,49 +159,120 @@ class Client(TelegramClient):
     def download(self, media_id):
         self.filemanager.download_media(media_id)
 
+    def get_updates(self):
+        """get updates since last saved state"""
+        pts = database.get_meta('pts')
+        state = self.invoke(tl.functions.updates.GetStateRequest())
+        if pts is None:
+            # initialize with current state
+            database.set_meta(pts=state.pts, date=state.date.timestamp())
+            return
+        date = datetime.fromtimestamp(database.get_meta('date'))
+
+        while pts < state.pts:
+            updates = self.invoke(tl.functions.updates.GetDifferenceRequest(pts=pts, date=date, qts=0))
+
+            # get sender (User) for each message
+            senders = [utils.find_user_or_chat(m.from_id, updates.users, updates.chats)
+                        if m.from_id is not None else
+                        utils.find_user_or_chat(m.to_id, updates.users, updates.chats)
+                        for m in updates.new_messages]
+
+            for message, sender in zip(updates.new_messages, senders):
+                from_id = message.from_id
+                entity_type = utils.get_entity_type(message.to_id)
+                if 'User' in entity_type:
+                    entity_id = message.from_id
+                elif 'Chat' in entity_type:
+                    entity_id = message.to_id.chat_id
+                try:
+                    database.add_messages(entity_id, [(message, sender),])
+                except ValueError:
+                    continue
+
+            for message in updates.new_encrypted_messages:
+                pass
+
+            for update in updates.other_updates:
+                self.handle_update(update, send=False)
+
+            if isinstance(updates, tl.types.updates.DifferenceSlice):
+                pts = updates.intermediate_state.pts
+                database.set_meta(pts=pts, date=updates.intermediate_state.date.timestamp())
+            else:
+                database.set_meta(pts=updates.state.pts, date=updates.state.date.timestamp())
+                break
+
     ########################
     ###  update handler  ###
     ########################
 
     def update_handler(self, update_object):
-
+        """this function gets passed to client.add_update_handler()"""
         if isinstance(update_object, tl.types.UpdatesTg):
-
             for update in update_object.updates:
-                if isinstance(update, tl.types.UpdateNewMessage):
-                    from_id = update.message.from_id
-                    to_entity = update.message.to_id
-                    entity_type = utils.get_entity_type(to_entity)
-                    if 'User' in entity_type:
-                        entity_id = update.message.from_id
-                    elif 'Chat' in entity_type:
-                        entity_id = update.message.to_id.chat_id
-                    sender = self.get_sender(from_id)
-                    database.add_messages(entity_id, [(update.message, sender),])
-                    msgdict = self.build_message_dict(update.message, sender)
-                    pyotherside.send('new_messages', str(entity_id), [msgdict,])
+                self.handle_update(update)
+            umax = sorted(update_object.updates, key=lambda u:u.pts)[-1]
+            #pts, date = max([u.pts for u in update_object.updates])
+            database.set_meta(pts=umax.pts, date=umax.date)
+        else:
+            self.handle_update(update_object)
+            #database.set_meta(pts=update_object.pts)
 
-                elif isinstance(update, tl.types.UpdateNewChannelMessage):
-                    entity_id = update.message.to_id.channel_id
-                    sender = self.get_sender(entity_id)
-                    database.add_messages(entity_id, [(update.message, sender),])
-                    msgdict = self.build_message_dict(update.message, sender)
-                    pyotherside.send('new_messages', str(entity_id), [msgdict,])
+    def handle_update(self, update_object, send=True):
+        """update cache with update_object and optionally update QML model"""
 
-                elif isinstance(update, tl.types.UpdateEditMessage):
-                    sender = database.get_message_sender(update.message.id)
-                    msgdict = self.build_message_dict(update.message, sender)
-                    database.update_message(update.message)
-                    pyotherside.send('update_message', msgdict)
+        if isinstance(update_object, tl.types.UpdateNewMessage):
+            from_id = update_object.message.from_id
+            to_entity = update_object.message.to_id
+            entity_type = utils.get_entity_type(to_entity)
+            if 'User' in entity_type:
+                entity_id = update_object.message.from_id
+            elif 'Chat' in entity_type:
+                entity_id = update_object.message.to_id.chat_id
+            sender = self.get_sender(from_id)
+            database.add_messages(entity_id, [(update_object.message, sender),])
+            if send:
+                msgdict = self.build_message_dict(update_object.message, sender)
+                pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
-                elif isinstance(update, tl.types.UpdateDeleteMessages):
-                    database.delete_messages(update.messages)
-                    pyotherside.send('delete_messages', map(str, update.messages))
+        elif isinstance(update_object, tl.types.UpdateNewChannelMessage):
+            entity_id = update_object.message.to_id.channel_id
+            sender = self.get_sender(entity_id)
+            database.add_messages(entity_id, [(update_object.message, sender),])
+            if send:
+                msgdict = self.build_message_dict(update_object.message, sender)
+                pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
-                elif isinstance(update, tl.types.UpdateReadHistoryOutbox) or \
-                        isinstance(update, tl.types.UpdateReadHistoryInbox) or \
-                        isinstance(update, tl.types.UpdateReadChannelInbox):
-                    self.request_dialogs()
+        elif isinstance(update_object, tl.types.UpdateEditMessage):
+            try:
+                database.update_message(update_object.message)
+            except ValueError:
+                # not yet cached
+                return
+            if send:
+                sender = database.get_message_sender(update_object.message.id)
+                msgdict = self.build_message_dict(update_object.message, sender)
+                pyotherside.send('update_message', msgdict)
+
+        elif isinstance(update_object, tl.types.UpdateMessageID):
+            m = client.invoke(tl.functions.messages.GetMessagesRequest(id=[update_object.id,]))
+            database.update_message(m.messages[0])
+            if send:
+                sender = database.get_message_sender(message.id)
+                msgdict = self.build_message_dict(message, sender)
+                pyotherside.send('new_messages', str(entity_id), [msgdict,])
+
+        elif isinstance(update_object, tl.types.UpdateDeleteMessages):
+            database.delete_messages(update_object.messages)
+            if send:
+                pyotherside.send('delete_messages', map(str, update_object.messages))
+
+        elif isinstance(update_object, tl.types.UpdateReadHistoryOutbox) or \
+                isinstance(update_object, tl.types.UpdateReadHistoryInbox) or \
+                isinstance(update_object, tl.types.UpdateReadChannelInbox):
+            if send:
+                self.request_dialogs()
 
         elif isinstance(update_object, tl.types.UpdateShortMessage):
             # Chat
@@ -210,16 +282,18 @@ class Client(TelegramClient):
             else:
                 sender = self.get_sender(entity_id)
             database.add_messages(entity_id, [(update_object, sender),])
-            msgdict = self.build_message_dict(update_object, sender)
-            pyotherside.send('new_messages', str(entity_id), [msgdict,])
+            if send:
+                msgdict = self.build_message_dict(update_object, sender)
+                pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
         elif isinstance(update_object, tl.types.UpdateShortChatMessage):
             # Group
             entity_id = update_object.chat_id
             sender = self.get_sender(update_object.from_id)
             database.add_messages(entity_id, [(update_object, sender),])
-            msgdict = self.build_message_dict(update_object, sender)
-            pyotherside.send('new_messages', str(entity_id), [msgdict,])
+            if send:
+                msgdict = self.build_message_dict(update_object, sender)
+                pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
     ############################
     ###  internal functions  ###
@@ -241,7 +315,7 @@ class Client(TelegramClient):
                 r = self.invoke(tl.functions.users.GetUsersRequest((inputuser,)))
                 self.user = r[0]
                 database.add_sender(self.user)
-                database.add_meta(self_id=self.user.id)
+                database.set_meta(self_id=self.user.id)
             return self.user
         sender = database.get_sender(sender_id)
         if not sender:
