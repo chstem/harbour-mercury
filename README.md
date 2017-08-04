@@ -18,7 +18,9 @@ Licensed under GNU GPLv3
    api_id <ID>
    api_hash <HASH>
 ```
-4. Build and run Mercury
+4. run Mercury using SailfishOS SDK, or copy and run manually:
+ - or copy the folders `TgClient` and `qml` to your SFOS device (e.g. to `/home/nemo/harbour-mercury`)
+ - execute `sailfish-qml /home/nemo/harbour-mercury/harbour-mercury` to run
 
 ### Why the Name?
 I choose the name because it nicely connects a couple of things:
