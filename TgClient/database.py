@@ -45,9 +45,9 @@ def set_meta(**kwargs):
         for key, value in kwargs.items():
             try:
                 m = Meta.get(key=key)
+                m.value = value
             except Meta.DoesNotExist:
-                m = Meta.create(key=key)
-            m.value = value
+                m = Meta.create(key=key, value=value)
             m.save()
 
 def get_meta(*keys):

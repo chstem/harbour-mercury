@@ -211,15 +211,18 @@ class Client(TelegramClient):
         """this function gets passed to client.add_update_handler()"""
         if isinstance(update_object, tl.types.UpdatesTg):
             for update in update_object.updates:
-                self.handle_update(update)
-            umax = sorted(update_object.updates, key=lambda u:u.pts)[-1]
-            #pts, date = max([u.pts for u in update_object.updates])
-            database.set_meta(pts=umax.pts, date=umax.date)
+                self.handle_update(update, users=update_object.users, chats=update_object.chats)
+            pts = max([getattr(u, 'pts', 0) for u in update_object.updates])
         else:
             self.handle_update(update_object)
-            #database.set_meta(pts=update_object.pts)
+            pts = getattr(update_object, 'pts', None)
+        date = getattr(update_object, 'date', None)
+        if pts:
+            database.set_meta(pts=pts)
+        if date:
+            database.set_meta(date=date.timestamp())
 
-    def handle_update(self, update_object, send=True):
+    def handle_update(self, update_object, send=True, users=[], chats=[]):
         """update cache with update_object and optionally update QML model"""
 
         if isinstance(update_object, tl.types.UpdateNewMessage):
@@ -230,7 +233,7 @@ class Client(TelegramClient):
                 entity_id = update_object.message.from_id
             elif 'Chat' in entity_type:
                 entity_id = update_object.message.to_id.chat_id
-            sender = self.get_sender(from_id)
+            sender = utils.find_user_or_chat(from_id, users, chats)
             database.add_messages(entity_id, [(update_object.message, sender),])
             if send:
                 msgdict = self.build_message_dict(update_object.message, sender)
@@ -238,7 +241,7 @@ class Client(TelegramClient):
 
         elif isinstance(update_object, tl.types.UpdateNewChannelMessage):
             entity_id = update_object.message.to_id.channel_id
-            sender = self.get_sender(entity_id)
+            sender = utils.find_user_or_chat(entity_id, users, chats)
             database.add_messages(entity_id, [(update_object.message, sender),])
             if send:
                 msgdict = self.build_message_dict(update_object.message, sender)
@@ -256,7 +259,7 @@ class Client(TelegramClient):
                 pyotherside.send('update_message', msgdict)
 
         elif isinstance(update_object, tl.types.UpdateMessageID):
-            m = client.invoke(tl.functions.messages.GetMessagesRequest(id=[update_object.id,]))
+            m = self.invoke(tl.functions.messages.GetMessagesRequest(id=[update_object.id,]))
             database.update_message(m.messages[0])
             if send:
                 sender = database.get_message_sender(message.id)
@@ -281,6 +284,9 @@ class Client(TelegramClient):
                 sender = self.get_sender('self')
             else:
                 sender = self.get_sender(entity_id)
+            if not sender:
+                # not cached yet
+                return
             database.add_messages(entity_id, [(update_object, sender),])
             if send:
                 msgdict = self.build_message_dict(update_object, sender)
@@ -290,6 +296,10 @@ class Client(TelegramClient):
             # Group
             entity_id = update_object.chat_id
             sender = self.get_sender(update_object.from_id)
+            if not sender:
+                # not cached yet
+                fullchat = self.invoke(tl.functions.messages.GetFullChatRequest(chat_id=entity_id))
+                sender = utils.find_user_or_chat(update_object.from_id, fullchat.users, [])
             database.add_messages(entity_id, [(update_object, sender),])
             if send:
                 msgdict = self.build_message_dict(update_object, sender)
