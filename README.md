@@ -12,15 +12,16 @@ Licensed under GNU GPLv3
    pip3 install telethon
 ```
 2. [Obtain](https://core.telegram.org/api/obtaining_api_id#obtaining-api-id) an API ID from Telegram
-3. Create a file `/home/nemo/.local/share/harbour-mercury/apikey` on the Sailfish device and insert your API ID and API HASH (without the tags `<>`):
+3. Create a file `/home/nemo/.local/share/harbour-mercury/apikey` on the Sailfish device and insert your API ID and API HASH, without the tags `<>`. Avoid using root here.
 
 ```
    api_id <ID>
    api_hash <HASH>
 ```
 4. run Mercury using SailfishOS SDK, or copy and run manually:
- - or copy the folders `TgClient` and `qml` to your SFOS device (e.g. to `/home/nemo/harbour-mercury`)
- - execute `sailfish-qml /home/nemo/harbour-mercury/harbour-mercury` to run
+ - copy the folders `TgClient` and `qml` to `/usr/share/harbour-mercury/` on your SFOS device (requires root)
+ - execute `sailfish-qml harbour-mercury` to run
+ - optionally, install `harbour-mercury_noarch.desktop` as `/usr/share/applications/harbour-mercury.desktop` and install the `icons` under `/usr/share/icons/hicolor/<resolution>/apps/`
 
 ### Why the Name?
 I choose the name because it nicely connects a couple of things:
