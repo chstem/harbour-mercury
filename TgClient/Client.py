@@ -168,6 +168,7 @@ class Client(TelegramClient):
             database.set_meta(pts=state.pts, date=state.date.timestamp())
             return
         date = datetime.fromtimestamp(database.get_meta('date'))
+        pyotherside.send('log', 'requesting updates, last state: {}, {}'.format(pts, date.timestamp()))
 
         while pts < state.pts:
             updates = self.invoke(tl.functions.updates.GetDifferenceRequest(pts=pts, date=date, qts=0))
@@ -194,7 +195,7 @@ class Client(TelegramClient):
                 pass
 
             for update in updates.other_updates:
-                self.handle_update(update, send=False)
+                self.handle_update(update, send=False, users=updates.users, chats=updates.chats)
 
             if isinstance(updates, tl.types.updates.DifferenceSlice):
                 pts = updates.intermediate_state.pts
@@ -234,7 +235,13 @@ class Client(TelegramClient):
             elif 'Chat' in entity_type:
                 entity_id = update_object.message.to_id.chat_id
             sender = utils.find_user_or_chat(from_id, users, chats)
-            database.add_messages(entity_id, [(update_object.message, sender),])
+            try:
+                database.add_messages(entity_id, [(update_object.message, sender),])
+            except database.DialogDoesNotExist:
+                # add dialog entity and try again
+                dialog = utils.find_user_or_chat(entity_id, users, chats)
+                database.add_dialog(dialog)
+                database.add_messages(entity_id, [(update_object.message, sender),])
             if send:
                 msgdict = self.build_message_dict(update_object.message, sender)
                 pyotherside.send('new_messages', str(entity_id), [msgdict,])
@@ -242,7 +249,12 @@ class Client(TelegramClient):
         elif isinstance(update_object, tl.types.UpdateNewChannelMessage):
             entity_id = update_object.message.to_id.channel_id
             sender = utils.find_user_or_chat(entity_id, users, chats)
-            database.add_messages(entity_id, [(update_object.message, sender),])
+            try:
+                database.add_messages(entity_id, [(update_object.message, sender),])
+            except database.DialogDoesNotExist:
+                # add channel entity (=sender) and try again
+                database.add_dialog(sender)
+                database.add_messages(entity_id, [(update_object.message, sender),])
             if send:
                 msgdict = self.build_message_dict(update_object.message, sender)
                 pyotherside.send('new_messages', str(entity_id), [msgdict,])
@@ -278,7 +290,7 @@ class Client(TelegramClient):
                 self.request_dialogs()
 
         elif isinstance(update_object, tl.types.UpdateShortMessage):
-            # Chat
+            # User
             entity_id = update_object.user_id
             if update_object.out:
                 sender = self.get_sender('self')
@@ -293,14 +305,20 @@ class Client(TelegramClient):
                 pyotherside.send('new_messages', str(entity_id), [msgdict,])
 
         elif isinstance(update_object, tl.types.UpdateShortChatMessage):
-            # Group
+            # Chat (Group/Channel)
             entity_id = update_object.chat_id
             sender = self.get_sender(update_object.from_id)
             if not sender:
                 # not cached yet
                 fullchat = self.invoke(tl.functions.messages.GetFullChatRequest(chat_id=entity_id))
                 sender = utils.find_user_or_chat(update_object.from_id, fullchat.users, [])
-            database.add_messages(entity_id, [(update_object, sender),])
+            try:
+                database.add_messages(entity_id, [(update_object, sender),])
+            except database.DialogDoesNotExist:
+                # add dialog entity and try again
+                dialog = utils.find_user_or_chat(entity_id, users, chats)
+                database.add_dialog(dialog)
+                database.add_messages(entity_id, [(update_object, sender),])
             if send:
                 msgdict = self.build_message_dict(update_object, sender)
                 pyotherside.send('new_messages', str(entity_id), [msgdict,])

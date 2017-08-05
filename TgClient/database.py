@@ -36,6 +36,14 @@ def initialize(dbfile):
     db.create_tables([Meta, Dialog, Sender, Message], safe=True)
     db.commit()
 
+####################
+###  Exceptions  ###
+####################
+
+class DialogDoesNotExist(Exception): pass
+class MessageDoesNotExist(Exception): pass
+class MessageAlreadyExists(Exception): pass
+
 ###################
 ###  Meta Data  ###
 ###################
@@ -125,7 +133,10 @@ def add_messages(dialog_id, messages):
     messages needs to be a sequence of (message, sender)
     """
     with db.atomic() as txn:
-        dialog = Dialog.get(Dialog.id == dialog_id)
+        try:
+            dialog = Dialog.get(Dialog.id == dialog_id)
+        except Dialog.DoesNotExist:
+            raise DialogDoesNotExist('Dialog with id {} does not exist'.format(dialog_id))
         for message, sender in messages:
             try:
                 s = Sender.get(id=sender.id)
@@ -143,7 +154,8 @@ def add_messages(dialog_id, messages):
                 m.save()
             except IntegrityError:
                 if Message.get(Message.id == message.id):
-                    raise ValueError("Message with id {} already exists".format(message.id))
+                    continue
+                    raise MessageAlreadyExists('Message with id {} already exists'.format(message.id))
                 else:
                     raise
 
@@ -163,7 +175,7 @@ def update_message(message):
             msg = Message.get(id=message.id)
             msg.blob = blob
         except Message.DoesNotExist:
-            raise ValueError("Message with id {} does not exist".format(message.id))
+            raise MessageDoesNotExist('Message with id {} does not exist'.format(message.id))
         msg.save()
 
 def delete_messages(message_ids):
