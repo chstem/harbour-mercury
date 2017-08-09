@@ -213,7 +213,7 @@ class Client(TelegramClient):
         if isinstance(update_object, tl.types.UpdatesTg):
             for update in update_object.updates:
                 self.handle_update(update, users=update_object.users, chats=update_object.chats)
-            pts = max([getattr(u, 'pts', 0) for u in update_object.updates])
+            pts = max([getattr(u, 'pts', 0) for u in update_object.updates if not isinstance(u, tl.types.UpdateNewChannelMessage)], default=None)
         else:
             self.handle_update(update_object)
             pts = getattr(update_object, 'pts', None)
