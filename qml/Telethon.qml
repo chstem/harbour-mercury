@@ -26,6 +26,7 @@ Python {
 
     property var progressHandlers: []
     property var iconHandlers: []
+    property bool connected: false
 
     onError: {
         pageStack.currentPage.error()
@@ -126,6 +127,7 @@ Python {
             if (status === "enter_number") {
                 pageStack.replace(Qt.resolvedUrl("pages/ConnectPage.qml"))
             } else if (status === true) {
+                connected = true
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
             }
         });

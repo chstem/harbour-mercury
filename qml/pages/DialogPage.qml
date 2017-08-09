@@ -53,7 +53,7 @@ Page {
                 // footer and header are switched due to ListView.BottomToTop
                 footer: Rectangle {
                     width: parent.width
-                    height: 80+12
+                    height: Theme.itemSizeMedium + 2*Theme.paddingSmall
                     color: Theme.rgba(Theme.secondaryHighlightColor, 1)
                     opacity: 1
                     Row {
@@ -64,13 +64,19 @@ Page {
                             id: icon
                             iconSource: currentDialog.icon
                             peerName: currentDialog.title
-                            height: 1.5*label.height
+                            height: Theme.itemSizeMedium
                         }
-                        Label {
-                            id: label
-                            anchors.verticalCenter: icon.verticalCenter
-                            text: currentDialog.title
-                            font.bold: true
+                        Column {
+                            Label {
+                                id: label
+                                text: currentDialog.title
+                                font.bold: true
+                            }
+                            Label {
+                                id: onlineIndicator
+                                text: backend.connected ? "connected" : "disconnected"
+                                color: backend.connected ? "green" : "red"
+                            }
                         }
                    }
                 }

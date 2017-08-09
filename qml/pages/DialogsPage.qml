@@ -55,6 +55,13 @@ Page {
             PageHeader {
                 id: header
                 title: qsTr("Chats")
+                Label {
+                    id: onlineIndicator
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: Theme.paddingSmall
+                    text: backend.connected ? "connected" : "disconnected"
+                    color: backend.connected ? "green" : "red"
+                }
             }
 
             SilicaListView {
