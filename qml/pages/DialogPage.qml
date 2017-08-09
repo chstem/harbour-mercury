@@ -19,6 +19,7 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import "../components"
 import "../components/messages"
 import "../utils.js" as Utils
 
@@ -35,25 +36,48 @@ Page {
 
         Column {
             id: column
-
             width: parent.width
             spacing: Theme.paddingLarge
 
-            PageHeader {
-                id: header
-                title: currentDialog.title
-            }
-
             SilicaListView {
                 id: messagesView
-                height: page.height - header.height - (2*Theme.paddingLarge)
+                height: page.height //- header.height - (2*Theme.paddingLarge)
+                contentHeight: parent.height
                 width: parent.width
                 anchors.left: parent.left
                 anchors.right: parent.right
                 spacing: Theme.paddingLarge
                 verticalLayoutDirection: ListView.BottomToTop
                 model: dialogModel
+
+                // footer and header are switched due to ListView.BottomToTop
+                footer: Rectangle {
+                    width: parent.width
+                    height: 80+12
+                    color: Theme.rgba(Theme.secondaryHighlightColor, 1)
+                    opacity: 1
+                    Row {
+                        anchors.verticalCenter: parent.verticalCenter
+                        x: Theme.paddingLarge
+                        spacing: Theme.paddingMedium
+                        PeerIcon {
+                            id: icon
+                            iconSource: currentDialog.icon
+                            peerName: currentDialog.title
+                            height: 1.5*label.height
+                        }
+                        Label {
+                            id: label
+                            anchors.verticalCenter: icon.verticalCenter
+                            text: currentDialog.title
+                            font.bold: true
+                        }
+                   }
+                }
+                footerPositioning: ListView.OverlayFooter
+
                 delegate: ListItem {
+                    z: -1
                     id: delegate
                     contentHeight: itemLoader.height
                     Loader {
@@ -65,6 +89,7 @@ Page {
                         itemLoader.source = "../components/messages/" + Utils.capitalize(model.type) + "Item.qml"
                     }
                 }
+
                 VerticalScrollDecorator { flickable: messagesView }
                 onContentYChanged: {
                     if (dialogModel.count > 0 && !requestTimer.running && (dialogModel.count - indexAt(0, contentY) < 10)) {

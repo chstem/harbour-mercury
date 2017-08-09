@@ -17,9 +17,8 @@
     along with Mercury. If not, see <http://www.gnu.org/licenses/>.
 */
 import QtQuick 2.0
-import QtGraphicalEffects 1.0
 import Sailfish.Silica 1.0
-import "../utils.js" as Utils
+import "../components"
 
 Page {
     id: page
@@ -72,7 +71,6 @@ Page {
 
                 delegate: ListItem {
                     id: delegate
-                    property string iconSource: model.icon
 
                     contentHeight: dialog.height + Theme.paddingMedium
                     contentWidth: parent.width
@@ -84,66 +82,29 @@ Page {
                         spacing: Theme.paddingMedium
                         x: Theme.paddingLarge
 
-                        Loader {
-                            id: iconLoader
+                        PeerIcon {
+                            id: icon
+                            iconSource: model.icon
+                            peerName: model.name
                             height: 1.5*label.height
-                            width: height
-                            sourceComponent: (iconSource == "") ? initials : icon
                         }
 
                         Label {
                             id: label
-                            anchors.verticalCenter: iconLoader.verticalCenter
+                            anchors.verticalCenter: icon.verticalCenter
                             text: model.name
                             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
                         }
 
-                        Component {
-                            id: initials
-                            Rectangle {
-                                height: parent.height
-                                width: height
-                                radius: width*0.5
-                                color: "steelblue"
-                                Text {
-                                    anchors.centerIn: parent
-                                    color: "white"
-                                    text: Utils.get_initials(model.name)
-                                }
-                            }
-                        }
-
-                        Component {
-                            id: icon
-                            Image {
-                                id: image
-                                height: parent.height
-                                width: height
-                                source: iconSource
-                                layer.enabled: true
-                                layer.effect: OpacityMask {
-                                    maskSource: Item {
-                                        width: image.width
-                                        height: image.height
-                                        Rectangle {
-                                            anchors.centerIn: parent
-                                            width: parent.width
-                                            height: parent.height
-                                            radius: width
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
                         Component.onCompleted: {
-                            backend.registerIconHandler(entity_id, function(filename) {iconSource = filename})
+                            backend.registerIconHandler(entity_id, function(filename) {icon.iconSource = filename})
                         }
                     }
 
                     onClicked: {
-                        currentDialog.entityID = entity_id
-                        currentDialog.title = name
+                        currentDialog.entityID = model.entity_id
+                        currentDialog.title = model.name
+                        currentDialog.icon = model.icon
                         pageStack.push(Qt.resolvedUrl("DialogPage.qml"))
                     }
                 }

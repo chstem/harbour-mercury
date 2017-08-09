@@ -43,6 +43,7 @@ ApplicationWindow
         id: currentDialog
         property string entityID: ""
         property string title: ""
+        property string icon: ""
     }
     ListModel {
         id: dialogModel
