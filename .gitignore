@@ -36,3 +36,5 @@ CMakeLists.txt.user
 
 RPMS
 
+# avoid backup files
+*~
