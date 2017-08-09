@@ -30,6 +30,13 @@ cp -rpv qml $TARGET/
 mkdir -p $TARGET/TgClient
 cp -rpv TgClient/*.py $TARGET/TgClient/
 
+if [ -f apikey.a ]; then
+    id=`sed -n '1p' < apikey.a`
+    hash=`sed -n '2p' < apikey.a`
+    sed -i "s/api_id = None/$id/" $TARGET/TgClient/__init__.py
+    sed -i "s/api_hash = None/$hash/" $TARGET/TgClient/__init__.py
+fi
+
 TARGET=%{buildroot}/%{_datadir}/applications
 mkdir -p $TARGET
 cp -rpv %{name}_noarch.desktop $TARGET/%{name}.desktop

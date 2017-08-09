@@ -34,17 +34,18 @@ def connect():
         return Test.connect_state
 
     # load apikey
-    if not os.path.isfile('apikey'):
-        if not os.path.isfile('apikey.example'):
-            with open('apikey.example', 'w') as fd:
-                fd.write('api_id <ID>\napi_hash <HASH>\n')
-        raise RuntimeError('Missing API ID/HASH')
-        return False
-    else:
+    if os.path.isfile('apikey'):
         with open('apikey') as fd:
             tmp = fd.readlines()
             api_id = int(tmp[0].split()[1])
             api_hash = tmp[1].split()[1]
+    else:
+        api_id = None
+        api_hash = None
+
+    if not api_id or not api_hash:
+        raise RuntimeError('Missing API ID/HASH')
+        return False
 
     client = Client(
         SESSION_ID,
