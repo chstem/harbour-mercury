@@ -37,7 +37,6 @@ ListItem {
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
             text: mdata.name + " " + new Date(mdata.time).toLocaleTimeString(Qt.locale(), "HH:mm")
             font.bold: true
-            font.pixelSize: Screen.sizeCategory >= Screen.Large ? Theme.fontSizeMedium : Theme.fontSizeNormal
         }
 
         // Title
@@ -46,7 +45,6 @@ ListItem {
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
             text: mdata.title
             wrapMode: Text.Wrap
-            font.pixelSize: Screen.sizeCategory >= Screen.Large ? Theme.fontSizeMedium : Theme.fontSizeNormal
         }
 
         // URL
@@ -55,7 +53,6 @@ ListItem {
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
             text: mdata.url
             wrapMode: Text.Wrap
-            font.pixelSize: Screen.sizeCategory >= Screen.Large ? Theme.fontSizeMedium : Theme.fontSizeNormal
         }
     }
 

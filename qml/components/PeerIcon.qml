@@ -44,8 +44,6 @@ Item {
                 anchors.centerIn: parent
                 color: "white"
                 text: Utils.get_initials(peerName)
-                font.bold: true
-                font.pixelSize: 0.45*parent.height
             }
         }
     }

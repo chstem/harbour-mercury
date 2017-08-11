@@ -38,7 +38,6 @@ ListItem {
             width: parent.width
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
             text: mdata.name + " " + new Date(mdata.time).toLocaleTimeString(Qt.locale(), "HH:mm")
-            font.pixelSize: Screen.sizeCategory >= Screen.Large ? Theme.fontSizeMedium : Theme.fontSizeNormal
             font.bold: true
         }
 
@@ -68,7 +67,6 @@ ListItem {
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
             text: qsTr("File") + ": " + mdata.caption
             wrapMode: Text.Wrap
-            font.pixelSize: Screen.sizeCategory >= Screen.Large ? Theme.fontSizeSmall : Theme.fontSizeMedium
         }
     }
 
