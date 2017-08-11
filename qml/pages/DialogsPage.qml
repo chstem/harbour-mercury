@@ -101,6 +101,7 @@ Page {
                             anchors.verticalCenter: icon.verticalCenter
                             text: model.name
                             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
+                            font.pixelSize: Screen.sizeCategory >= Screen.Large ? Theme.fontSizeLarge : Theme.fontSizeNormal
                         }
 
                         Component.onCompleted: {

@@ -4,6 +4,7 @@ function capitalize(s)
 }
 
 function get_initials(str) {
+    if (str.length === 0) return str
     var res = str.split(" ")
     var initials = res[0][0]
     if (res.length > 1) initials += res[res.length-1][0]

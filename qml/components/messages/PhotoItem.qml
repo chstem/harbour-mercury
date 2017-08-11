@@ -39,6 +39,7 @@ ListItem {
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
             text: mdata.name + " " + new Date(mdata.time).toLocaleTimeString(Qt.locale(), "HH:mm")
             font.bold: true
+            font.pixelSize: Screen.sizeCategory >= Screen.Large ? Theme.fontSizeMedium : Theme.fontSizeNormal
         }
 
         // Photo
@@ -74,6 +75,7 @@ ListItem {
             visible: mdata.caption.length > 0
             text: qsTr("Photo") + ": " + mdata.caption
             wrapMode: Text.Wrap
+            font.pixelSize: Screen.sizeCategory >= Screen.Large ? Theme.fontSizeMedium : Theme.fontSizeNormal
         }
     }
 
