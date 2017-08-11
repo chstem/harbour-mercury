@@ -97,10 +97,12 @@ class FileManager:
                 break  # This attribute has higher priority
             elif type(attr) == tl.types.DocumentAttributeAudio:
                 file_name = '{}_{}'.format(attr.performer, attr.title)
+            elif type(attr) == tl.types.DocumentAttributeVideo:
+                file_name = media.document.date.strftime('video_%Y-%m-%d_%H-%M-%S')
 
         if file_name is None:
             file_name = document.date.strftime('doc_%Y-%m-%d_%H-%M-%S')
-            file_name += utils.get_extension(message_media_document)
+            file_name += utils.get_extension(media)
 
         doc_id = media.document.id
 
