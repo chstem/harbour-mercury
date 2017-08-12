@@ -27,6 +27,7 @@ ApplicationWindow
     initialPage: Component { StartPage {} }
     cover: Qt.resolvedUrl("cover/CoverPage.qml")
     allowedOrientations: defaultAllowedOrientations
+    _defaultPageOrientations: Orientation.All
 
     // Telegram API
     Telethon { id: backend }

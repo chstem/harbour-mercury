@@ -37,6 +37,7 @@ ListItem {
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
             text: mdata.name + " " + new Date(mdata.time).toLocaleTimeString(Qt.locale(), "HH:mm")
             font.bold: true
+            font.pixelSize: Theme.fontSizeMedium
         }
 
         // Message
@@ -45,6 +46,7 @@ ListItem {
             color: delegate.highlighted ? Theme.highlightColor : Theme.primaryColor
             text: mdata.message
             wrapMode: Text.Wrap
+            font.pixelSize: Theme.fontSizeMedium
         }
     }
 
