@@ -18,9 +18,7 @@
 */
 
 import QtQuick 2.0
-import Sailfish.Silica 1.0
 import io.thp.pyotherside 1.3
-
 
 Python {
 
@@ -31,6 +29,7 @@ Python {
     onError: {
         pageStack.currentPage.error()
         console.log("Error: " + traceback)
+        logger.error(traceback)
         errorNotification.show(traceback)
     }
 
@@ -43,6 +42,7 @@ Python {
 
         setHandler("log", function(message) {
             console.log("Python: " + message)
+            logger.log("Python: " + message)
         })
 
         // accept data from Telegram
@@ -138,7 +138,7 @@ Python {
     }
 
     function retry() {
-        call('TgClient.reset_session')
+        call("TgClient.reset_session")
         connect()
     }
 

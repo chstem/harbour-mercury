@@ -19,8 +19,10 @@
 
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import io.thp.pyotherside 1.3
 import "pages"
 import "components"
+
 
 ApplicationWindow
 {
@@ -52,5 +54,21 @@ ApplicationWindow
 
     AppNotification {
         id: errorNotification
+    }
+
+    Python {
+        id: logger
+        Component.onCompleted: {
+            addImportPath(Qt.resolvedUrl("."))
+            importModule("logger", function () {})
+        }
+
+        function log(message){
+            call("logger.logger.info", [message])
+        }
+
+        function error(message){
+            call("logger.logger.error", [message])
+        }
     }
 }
