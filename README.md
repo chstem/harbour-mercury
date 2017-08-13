@@ -21,6 +21,7 @@ exit
 `<>` (Avoid being root here!):
 
 ```bash
+mkdir -p /home/nemo/.local/share/harbour-mercury
 cat <<EOF > /home/nemo/.local/share/harbour-mercury/apikey 
 api_id <ID>
 api_hash <HASH>
