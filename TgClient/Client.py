@@ -227,7 +227,10 @@ class Client(TelegramClient):
                 from_id = message.from_id
                 entity_type = utils.get_entity_type(message.to_id)
                 if 'User' in entity_type:
-                    entity_id = message.from_id
+                    if message.out:
+                        entity_id = message.to_id.user_id
+                    else:
+                        entity_id = message.from_id
                 elif 'Chat' in entity_type:
                     entity_id = message.to_id.chat_id
                 try:
