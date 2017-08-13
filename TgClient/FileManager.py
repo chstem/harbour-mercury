@@ -37,7 +37,7 @@ class FileManager:
         elif type(chat.photo) == tl.types.UserProfilePhoto:
             filename = os.path.join(self.settings['FILE_CACHE'], 'users', str(chat.id))
         else:
-            pyotherside.send('log', (type(chat.photo), chat.id))
+            pyotherside.send('log', 'Photo type unkown: {} id: {}'.format(type(chat.photo), chat.id))
             raise TypeError('Invalid Photo Type')
 
         filename += utils.get_extension(chat.photo)
