@@ -60,18 +60,23 @@ def connect():
     if DC_IP:
         client.session.server_address = DC_IP
 
-    pyotherside.send('log', 'Connecting to Telegram servers...')
-    if not client.connect():
-        pyotherside.send('log', 'Initial connection failed. Retrying...')
+    pyotherside.send('log', 'Connecting to Telegram servers ...')
+    try:
         if not client.connect():
-            pyotherside.send('log', 'Could not connect to Telegram servers.')
-            return False
+            pyotherside.send('log', 'Initial connection failed. Retrying ...')
+            if not client.connect():
+                pyotherside.send('log', 'Could not connect to Telegram servers')
+                return False
+    except OSError:
+        pyotherside.send('log', 'Network is unreachable')
+        return False
 
     if not client.is_user_authorized():
         return 'enter_number'
 
-    client.add_update_handler(client.update_handler)
+    client.connected = True
     client.get_sender('self')   # cache self user
+    client.add_update_handler(client.update_handler)
     client.get_updates()
 
     return True

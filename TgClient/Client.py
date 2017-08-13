@@ -28,6 +28,7 @@ class Client(TelegramClient):
 
     def __init__(self, session_user_id, api_id, api_hash, settings, proxy=None):
         super().__init__(session_user_id, api_id, api_hash, proxy)
+        self.connected = False
         self.settings = settings
         self.filemanager = FileManager(self, settings)
         self.contacts = {}
@@ -35,6 +36,37 @@ class Client(TelegramClient):
         database.initialize('cache.db')
         #database.initialize('{}.db'.format(session_user_id))
         #database.initialize(':memory:')
+
+    def reconnect(self):
+        try:
+            super().reconnect()
+            self.connected = True
+        except OSError:
+            return False
+        pyotherside.send('connection', True)
+        if not self._update_handlers:
+            self.add_update_handler(self.update_handler)
+        try:
+            self._set_updates_thread(running=True)
+        except RuntimeError:
+            # still running
+            pass
+        self.get_updates()
+        return True
+
+    def invoke(self, request, updates=None):
+        if not self.connected:
+            if not self.reconnect():
+                return False
+        try:
+            return super().invoke(request, updates)
+        except (TimeoutError, ConnectionError):
+            self.connected = False
+            pyotherside.send('connection', False)
+            pyotherside.send('log', 'Connection lost, try reconnecting ...')
+            if self.reconnect():
+                return super().invoke(request, updates)
+        return False
 
     ###############
     ###  login  ###
@@ -84,7 +116,13 @@ class Client(TelegramClient):
         pyotherside.send('contacts_list', sorted(contacts_model, key=lambda u:u['name']))
 
     def request_dialogs(self):
-        dialogs, entities = self.get_dialogs(limit=0)
+        if self.connected:
+            dialogs, entities = self.get_dialogs(limit=0)
+        elif self.reconnect():
+            dialogs, entities = self.get_dialogs(limit=0)
+        else:
+            entities = database.get_dialogs()
+
         dialogs_model = []
         download_queue = []
 
@@ -112,10 +150,12 @@ class Client(TelegramClient):
 
         pyotherside.send('update_dialogs', dialogs_model)
 
-        # start downloads
-        for chat, filename in download_queue:
-            self.filemanager.download_dialog_photo(chat, filename)
-        #pyotherside.send('log', 'all chat icons downloaded')
+        if self.connected:
+            # download icons
+            for chat, filename in download_queue:
+                pyotherside.send('log', 'start icon download: {}'.format(filename))
+                self.filemanager.download_dialog_photo(chat, filename)
+                pyotherside.send('log', 'finished icon download: {}'.format(filename))
 
     def request_messages(self, entity_id, last_id=0, count=20):
         entity = self.get_entity(int(entity_id))
@@ -163,6 +203,8 @@ class Client(TelegramClient):
         """get updates since last saved state"""
         pts = database.get_meta('pts')
         state = self.invoke(tl.functions.updates.GetStateRequest())
+        if not state:
+            return
         if pts is None:
             # initialize with current state
             database.set_meta(pts=state.pts, date=state.date.timestamp())
@@ -172,6 +214,8 @@ class Client(TelegramClient):
 
         while pts < state.pts:
             updates = self.invoke(tl.functions.updates.GetDifferenceRequest(pts=pts, date=date, qts=0))
+            if not updates:
+                return
 
             # get sender (User) for each message
             senders = [utils.find_user_or_chat(m.from_id, updates.users, updates.chats)
@@ -272,6 +316,8 @@ class Client(TelegramClient):
 
         elif isinstance(update_object, tl.types.UpdateMessageID):
             m = self.invoke(tl.functions.messages.GetMessagesRequest(id=[update_object.id,]))
+            if not m:
+                return
             database.update_message(m.messages[0])
             if send:
                 sender = database.get_message_sender(message.id)
@@ -311,6 +357,8 @@ class Client(TelegramClient):
             if not sender:
                 # not cached yet
                 fullchat = self.invoke(tl.functions.messages.GetFullChatRequest(chat_id=entity_id))
+                if not fullchat:
+                    return
                 sender = utils.find_user_or_chat(update_object.from_id, fullchat.users, [])
             try:
                 database.add_messages(entity_id, [(update_object, sender),])
@@ -331,6 +379,8 @@ class Client(TelegramClient):
         entity = database.get_dialog(entity_id)
         if not entity:
             r = self.invoke(tl.functions.messages.GetChatsRequest(id=[entity_id,]))
+            if not r:
+                return
             entity = r.chats[0]
         return entity
 
@@ -341,6 +391,8 @@ class Client(TelegramClient):
             if not self.user:
                 inputuser = tl.types.InputUserSelf()
                 r = self.invoke(tl.functions.users.GetUsersRequest((inputuser,)))
+                if not r:
+                    return
                 self.user = r[0]
                 database.add_sender(self.user)
                 database.set_meta(self_id=self.user.id)
@@ -352,6 +404,8 @@ class Client(TelegramClient):
 
     def get_contacts(self):
         r = self.invoke(tl.functions.contacts.GetContactsRequest(self.api_hash))
+        if not r:
+            return
         for contact, user in zip(r.contacts, r.users):
             self.contacts[user.id] = contact, user
 
@@ -367,6 +421,9 @@ class Client(TelegramClient):
                 min_id=min_id,
                 add_offset=0,
             ))
+
+            if not result:
+                return
 
             # get sender (User) for each message
             senders = [utils.find_user_or_chat(m.from_id, result.users, result.chats)

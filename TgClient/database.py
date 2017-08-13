@@ -1,9 +1,9 @@
 import pickle
 from .peewee import *
 
-####################
-###  Basic Setup ###
-####################
+#####################
+###  Basic Setup  ###
+#####################
 
 db = SqliteDatabase(None, threadlocals=False, check_same_thread=False)
 
@@ -89,6 +89,15 @@ def get_dialog(entity_id):
         return entity
     except Dialog.DoesNotExist:
         return None
+
+def get_dialogs(limit=-1):
+    def last_msg(d):
+        if not d.messages:
+            return 0
+        return d.messages[-1].date.timestamp()
+    query = Dialog.select()
+    dialogs = list(reversed(sorted(query, key=lambda d: last_msg(d))))
+    return [pickle.loads(d.blob) for d in dialogs[:limit]]
 
 def add_sender(sender):
     blob = pickle.dumps(sender)

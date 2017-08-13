@@ -46,6 +46,10 @@ Python {
         })
 
         // accept data from Telegram
+        setHandler("connection", function(status) {
+            connected = status
+        })
+
         setHandler("update_dialogs", function(dialogs) {
             dialogsModel.clear()
             for (var i=0; i<dialogs.length; i++) {
@@ -126,8 +130,8 @@ Python {
         call("TgClient.connect", [], function(status) {
             if (status === "enter_number") {
                 pageStack.replace(Qt.resolvedUrl("pages/ConnectPage.qml"))
-            } else if (status === true) {
-                connected = true
+            } else {
+                connected = status
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
             }
         });
@@ -142,10 +146,10 @@ Python {
         call("TgClient.client.send_code", [code], function(status) {
             if (status === "pass_required") {
                 pageStack.replace(Qt.resolvedUrl("pages/PasswordPage.qml"))
-            } else if (status === true) {
-                pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
             } else if (status === "invalid") {
                 errorNotification.show("Invalid login code");
+            } else if (status === true) {
+                pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
             }
         })
     }
