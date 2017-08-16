@@ -19,6 +19,7 @@ from datetime import datetime
 import os
 import pyotherside
 from telethon import *
+import time
 
 from .FileManager import FileManager
 from . import database
@@ -154,8 +155,9 @@ class Client(TelegramClient):
             # download icons
             for chat, filename in download_queue:
                 pyotherside.send('log', 'start icon download: {}'.format(filename))
+                t = time.time()
                 self.filemanager.download_dialog_photo(chat, filename)
-                pyotherside.send('log', 'finished icon download: {}'.format(filename))
+                pyotherside.send('log', 'finished icon download: {}, {:.2f} sec'.format(filename, time.time()-t))
 
     def request_messages(self, entity_id, last_id=0, count=20):
         entity = self.get_entity(int(entity_id))
@@ -377,6 +379,9 @@ class Client(TelegramClient):
     ############################
     ###  internal functions  ###
     ############################
+
+    def get_dc(self):
+        return next(dc.id for dc in self.dc_options if dc.ip_address == self.session.server_address)
 
     def get_entity(self, entity_id):
         entity = database.get_dialog(entity_id)

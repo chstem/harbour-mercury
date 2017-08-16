@@ -36,7 +36,7 @@ Item {
     Component {
         id: initials
         Rectangle {
-            height: parent.height
+            height: iconLoader.height
             width: height
             radius: width*0.5
             color: "steelblue"
@@ -54,7 +54,7 @@ Item {
         id: icon
         Image {
             id: image
-            height: parent.height
+            height: iconLoader.height
             width: height
             source: iconSource
             layer.enabled: true

@@ -58,8 +58,14 @@ class FileManager:
         else:
             photo = chat.photo.photo_big
 
-        #client = self.client.create_new_connection(on_dc=photo.dc_id)
-        self.client.download_file(
+        # check Data Center
+        if photo.dc_id != self.client.get_dc():
+            client = self.client._get_exported_client(photo.dc_id)
+        else:
+            client = self.client
+
+        # download file
+        client.download_file(
             tl.types.InputFileLocation(
                 volume_id = photo.volume_id,
                 local_id = photo.local_id,
@@ -68,7 +74,7 @@ class FileManager:
             filename,
         )
 
-        entity_id = '{}_{}'.format(utils.get_entity_type(chat), chat.id)
+        entity_id = str(chat.id)
         pyotherside.send('icon', entity_id, filename)
 
     def download_media(self, media_id):
