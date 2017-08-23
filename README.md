@@ -50,6 +50,22 @@ sailfish-qml harbour-mercury
 
 - Optionally, install `harbour-mercury_noarch.desktop` as `/usr/share/applications/harbour-mercury.desktop` and install the `icons` under `/usr/share/icons/hicolor/<resolution>/apps/`
 
+### Performance Issues
+
+- The connection to the Telegram servers is AES encrypted. If available, `libssl.so` will be used, otherwise a pure Python AES implementation serves as fallback. However, on mobile processors, this severely slows down network speed. If you experience slow download speed, make sure OpenSSL is installed:
+
+```bash
+devel-su
+pkcon install openssl
+```
+
+- As part of authentication with Telegram servers, the client needs to factorize some big number (presumably for bot protection). Although Telethon comes with some algorithm for this, it is not the most efficient one. If available, a faster [SymPy](http://www.sympy.org/en/index.html) routine will be used instead:
+
+```bash
+devel-su
+pip3 install sympy
+```
+
 ### Why the Name?
 
 I choose the name because it nicely connects a couple of things:
