@@ -130,7 +130,7 @@ Python {
         call("TgClient.connect", [], function(status) {
             if (status === "enter_number") {
                 pageStack.replace(Qt.resolvedUrl("pages/ConnectPage.qml"))
-            } else {
+            } else if (status !== undefined) {
                 connected = status
                 pageStack.replace(Qt.resolvedUrl("pages/DialogsPage.qml"))
             }
