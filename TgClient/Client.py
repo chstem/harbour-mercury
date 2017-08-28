@@ -25,30 +25,32 @@ from .FileManager import FileManager
 from . import database
 from . import utils
 
-class Client(TelegramClient):
+class Client():
+
+    __version__ = '0.1'
 
     def __init__(self, session_user_id, api_id, api_hash, settings, proxy=None):
-        super().__init__(session_user_id, api_id, api_hash, proxy)
+        self.client = TelegramClient(session_user_id, api_id, api_hash, proxy)
         self.connected = False
         self.settings = settings
-        self.filemanager = FileManager(self, settings)
+        self.filemanager = FileManager(self.client, settings)
         self.contacts = {}
         self.user = None
         database.initialize('cache.db')
         #database.initialize('{}.db'.format(session_user_id))
         #database.initialize(':memory:')
 
-    def reconnect(self):
+    def reconnect(self, new_dc=None):
         try:
-            super().reconnect()
+            self.client.reconnect(new_dc)
             self.connected = True
         except OSError:
             return False
         pyotherside.send('connection', True)
-        if not self._update_handlers:
-            self.add_update_handler(self.update_handler)
+        if not self.client._update_handlers:
+            self.client.add_update_handler(self.update_handler)
         try:
-            self._set_updates_thread(running=True)
+            self.client._set_updates_thread(running=True)
         except RuntimeError:
             # still running
             pass
@@ -60,13 +62,13 @@ class Client(TelegramClient):
             if not self.reconnect():
                 return False
         try:
-            return super().invoke(request, updates)
+            return self.client.invoke(request, updates)
         except (TimeoutError, ConnectionError):
             self.connected = False
             pyotherside.send('connection', False)
             pyotherside.send('log', 'Connection lost, try reconnecting ...')
             if self.reconnect():
-                return super().invoke(request, updates)
+                return self.client.invoke(request, updates)
         return False
 
     ###############
@@ -77,11 +79,11 @@ class Client(TelegramClient):
     def request_code(self, phonenumber=None):
         if phonenumber:
             self.phonenumber = phonenumber
-        self.send_code_request(self.phonenumber)
+        self.client.send_code_request(self.phonenumber)
 
     def send_code(self, code):
         try:
-            status = self.sign_in(phone_number=self.phonenumber, code=code)
+            status = self.client.sign_in(phone_number=self.phonenumber, code=code)
         # Two-step verification may be enabled
         except errors.SessionPasswordNeededError:
             return 'pass_required'
@@ -95,7 +97,7 @@ class Client(TelegramClient):
 
     # Two-step verification
     def send_pass(self, password):
-        status = self.sign_in(password=password)
+        status = self.client.sign_in(password=password)
         if not status:
             return 'invalid'
         if isinstance(status, tl.types.User):
@@ -118,9 +120,9 @@ class Client(TelegramClient):
 
     def request_dialogs(self):
         if self.connected:
-            dialogs, entities = self.get_dialogs(limit=0)
+            dialogs, entities = self.client.get_dialogs(limit=0)
         elif self.reconnect():
-            dialogs, entities = self.get_dialogs(limit=0)
+            dialogs, entities = self.client.get_dialogs(limit=0)
         else:
             entities = database.get_dialogs()
 
@@ -298,6 +300,7 @@ class Client(TelegramClient):
         elif isinstance(update_object, tl.types.UpdateNewChannelMessage):
             entity_id = update_object.message.to_id.channel_id
             sender = utils.find_user_or_chat(entity_id, users, chats)
+
             try:
                 database.add_messages(entity_id, [(update_object.message, sender),])
             except database.DialogDoesNotExist:
@@ -379,9 +382,6 @@ class Client(TelegramClient):
     ############################
     ###  internal functions  ###
     ############################
-
-    def get_dc(self):
-        return next(dc.id for dc in self.dc_options if dc.ip_address == self.session.server_address)
 
     def get_entity(self, entity_id):
         entity = database.get_dialog(entity_id)

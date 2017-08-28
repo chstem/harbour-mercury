@@ -55,7 +55,8 @@ def connect():
         proxy = PROXY,
     )
 
-    pyotherside.send('log', ''.join(('Telethon Client Version: ', client.__version__)))
+    pyotherside.send('log', ''.join(('Mercury Version: ', client.__version__)))
+    pyotherside.send('log', ''.join(('Telethon Client Version: ', client.client.__version__)))
 
     if DC_IP:
         client.session.server_address = DC_IP
@@ -63,12 +64,12 @@ def connect():
     # start connecting
     pyotherside.send('log', 'Connecting to Telegram servers ...')
     try:
-        if not client.connect():
+        if not client.client.connect():
             pyotherside.send('log', 'Initial connection failed. Retrying ...')
-            if not client.connect():
+            if not client.client.connect():
                 pyotherside.send('log', 'Could not connect to Telegram servers')
                 return False
-        if not client.is_user_authorized():
+        if not client.client.is_user_authorized():
             return 'enter_number'
     except (TimeoutError, ConnectionError, OSError):
         pyotherside.send('log', 'Connecting failed, network unreachable?')
@@ -77,7 +78,7 @@ def connect():
     # connection successful
     client.connected = True
     client.get_sender('self')   # cache self user
-    client.add_update_handler(client.update_handler)
+    client.client.add_update_handler(client.update_handler)
     client.get_updates()
 
     return True

@@ -59,7 +59,7 @@ class FileManager:
             photo = chat.photo.photo_big
 
         # check Data Center
-        if photo.dc_id != self.client.get_dc():
+        if photo.dc_id != utils.get_dc(self.client):
             client = self.client._get_exported_client(photo.dc_id)
         else:
             client = self.client

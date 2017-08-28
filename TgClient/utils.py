@@ -23,3 +23,7 @@ def get_media_type(message_media):
     elif type(message_media) == tl.types.MessageMediaWebPage:
         return 'webpage'
     raise TypeError('unsupported TL media type')
+
+def get_dc(client):
+    """return id of current connected Data Center"""
+    return next(dc.id for dc in client.dc_options if dc.ip_address == client.session.server_address)
