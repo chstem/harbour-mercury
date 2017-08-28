@@ -299,8 +299,7 @@ class Client():
 
         elif isinstance(update_object, tl.types.UpdateNewChannelMessage):
             entity_id = update_object.message.to_id.channel_id
-            sender = utils.find_user_or_chat(entity_id, users, chats)
-
+            sender = utils.find_user_or_chat(update_object.message.from_id, users, chats)
             try:
                 database.add_messages(entity_id, [(update_object.message, sender),])
             except database.DialogDoesNotExist:
