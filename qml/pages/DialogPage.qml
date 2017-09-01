@@ -85,11 +85,23 @@ Page {
                 delegate: ListItem {
                     z: -1
                     id: delegate
-                    contentHeight: itemLoader.height
-                    Loader {
-                        property alias delegate: delegate
-                        id: itemLoader
+                    contentHeight: item.height
+                    Column {
+                        id: item
+                        height: itemLoader.height + separator.height
                         width: parent.width
+                        spacing: Theme.paddingMedium
+                        Loader {
+                            property alias delegate: delegate
+                            id: itemLoader
+                            width: parent.width
+                        }
+                        Separator {
+                            id: separator
+                            width: parent.width
+                            color: Theme.primaryColor
+                            horizontalAlignment: Qt.AlignHCenter
+                        }
                     }
                     Component.onCompleted: {
                         itemLoader.source = "../components/messages/" + Utils.capitalize(model.type) + "Item.qml"
