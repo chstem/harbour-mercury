@@ -22,7 +22,7 @@ exit
 
 ```bash
 mkdir -p /home/nemo/.local/share/harbour-mercury
-cat <<EOF > /home/nemo/.local/share/harbour-mercury/apikey 
+cat <<EOF > /home/nemo/.local/share/harbour-mercury/apikey
 api_id <ID>
 api_hash <HASH>
 EOF
@@ -34,7 +34,7 @@ EOF
 
 ```bash
 cd /home/nemo/Downloads
-git clone https://github.com/feodoran/harbour-mercury.git
+git clone https://github.com/chstem/harbour-mercury.git
 devel-su
 mkdir /usr/share/harbour-mercury
 cd /home/nemo/Downloads/harbour-mercury/

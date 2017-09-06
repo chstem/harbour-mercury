@@ -7,7 +7,7 @@ Version:    0.1
 Release:    1
 Group:      Qt/Qt
 License:    GPLv3 / MIT
-URL:        https://github.com/feodoran/harbour-mercury
+URL:        https://github.com/chstem/harbour-mercury
 Source0:    %{name}-%{version}.tar.bz2
 BuildArch:  noarch
 Requires:   sailfishsilica-qt5 >= 0.10.9
