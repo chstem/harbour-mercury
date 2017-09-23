@@ -410,7 +410,7 @@ class Client():
         return sender
 
     def get_contacts(self):
-        r = self.invoke(tl.functions.contacts.GetContactsRequest(self.api_hash))
+        r = self.invoke(tl.functions.contacts.GetContactsRequest(self.client.api_hash))
         if not r:
             return
         for contact, user in zip(r.contacts, r.users):
