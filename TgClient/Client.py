@@ -30,7 +30,7 @@ class Client():
     __version__ = '0.1'
 
     def __init__(self, session_user_id, api_id, api_hash, settings, proxy=None):
-        self.client = TelegramClient(session_user_id, api_id, api_hash, proxy)
+        self.client = TelegramClient(session_user_id, api_id, api_hash, proxy=proxy)
         self.connected = False
         self.settings = settings
         self.filemanager = FileManager(self.client, settings)
@@ -58,17 +58,15 @@ class Client():
         return True
 
     def invoke(self, request, updates=None):
-        if not self.connected:
-            if not self.reconnect():
-                return False
         try:
             return self.client.invoke(request, updates)
-        except (TimeoutError, ConnectionError):
+            pyotherside.send('connection', True)
+            self.connected = True
+        except :
             self.connected = False
             pyotherside.send('connection', False)
-            pyotherside.send('log', 'Connection lost, try reconnecting ...')
-            if self.reconnect():
-                return self.client.invoke(request, updates)
+            pyotherside.send('log', 'Connection lost')
+            raise
         return False
 
     ###############
@@ -76,14 +74,12 @@ class Client():
     ###############
 
     # login code
-    def request_code(self, phonenumber=None):
-        if phonenumber:
-            self.phonenumber = phonenumber
-        self.client.send_code_request(self.phonenumber)
+    def request_code(self, phonenumber):
+        self.client.send_code_request(phonenumber)
 
     def send_code(self, code):
         try:
-            status = self.client.sign_in(phone_number=self.phonenumber, code=code)
+            status = self.client.sign_in(code=code)
         # Two-step verification may be enabled
         except errors.SessionPasswordNeededError:
             return 'pass_required'
