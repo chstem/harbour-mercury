@@ -1,5 +1,10 @@
-import pickle
+from telethon.extensions import BinaryReader
 from .peewee import *
+
+def from_bytes(data):
+    """convert bytes to Telegram object"""
+    with BinaryReader(data=data) as reader:
+        return reader.tgread_object()
 
 #####################
 ###  Basic Setup  ###
@@ -73,7 +78,7 @@ def get_meta(*keys):
 #############################
 
 def add_dialog(entity):
-    blob = pickle.dumps(entity)
+    blob = entity.to_bytes()
     with db.atomic() as txn:
         try:
             dialog = Dialog.get(id=entity.id)
@@ -85,7 +90,7 @@ def add_dialog(entity):
 def get_dialog(entity_id):
     try:
         dialog = Dialog.get(Dialog.id == entity_id)
-        entity = pickle.loads(dialog.blob)
+        entity = from_bytes(dialog.blob)
         return entity
     except Dialog.DoesNotExist:
         return None
@@ -97,10 +102,10 @@ def get_dialogs(limit=-1):
         return d.messages[-1].date.timestamp()
     query = Dialog.select()
     dialogs = list(reversed(sorted(query, key=lambda d: last_msg(d))))
-    return [pickle.loads(d.blob) for d in dialogs[:limit]]
+    return [from_bytes(d.blob) for d in dialogs[:limit]]
 
 def add_sender(sender):
-    blob = pickle.dumps(sender)
+    blob = sender.to_bytes()
     with db.atomic() as txn:
         try:
             s = Sender.get(id=sender.id)
@@ -120,7 +125,7 @@ def get_sender(sender_id):
         except Dialog.DoesNotExist:
             sender = None
     if sender:
-        return pickle.loads(sender.blob)
+        return from_bytes(sender.blob)
     return None
 
 def get_self():
@@ -128,7 +133,7 @@ def get_self():
     if self_id:
         return get_sender(self_id)
     for sender in Sender.select():
-        s = pickle.loads(sender.blob)
+        s = from_bytes(sender.blob)
         if s.is_self:
             return s
     return None
@@ -150,7 +155,7 @@ def add_messages(dialog_id, messages):
             try:
                 s = Sender.get(id=sender.id)
             except Sender.DoesNotExist:
-                s = Sender.create(id=sender.id, blob=pickle.dumps(sender))
+                s = Sender.create(id=sender.id, blob=sender.to_bytes())
                 s.save()
             try:
                 m = Message.create(
@@ -158,7 +163,7 @@ def add_messages(dialog_id, messages):
                     date = message.date,
                     dialog = dialog,
                     sender = s,
-                    blob = pickle.dumps(message),
+                    blob = message.to_bytes(),
                 )
                 m.save()
             except IntegrityError:
@@ -170,15 +175,15 @@ def add_messages(dialog_id, messages):
 
 def get_message(message_id):
     msg = Message.get(id=message_id)
-    return pickle.loads(msg.blob)
+    return from_bytes(msg.blob)
 
 def get_message_sender(message_id):
     msg = Message.get(id=message_id)
-    sender = pickle.loads(msg.sender.blob)
+    sender = from_bytes(msg.sender.blob)
     return sender
 
 def update_message(message):
-    blob = pickle.dumps(message)
+    blob = message.to_bytes()
     with db.atomic() as txn:
         try:
             msg = Message.get(id=message.id)
@@ -213,7 +218,7 @@ def get_message_history(dialog_id, limit=0, max_id=0, min_id=0):
     query = query.order_by(-Message.id)
     if limit:
         query = query.limit(limit)
-    return [(pickle.loads(msg.blob), pickle.loads(msg.sender.blob)) for msg in query]
+    return [(from_bytes(msg.blob), from_bytes(msg.sender.blob)) for msg in query]
 
 def get_last_message(dialog_id):
     """get newest message_id (highest id) cached for dialog_id"""
