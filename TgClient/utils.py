@@ -26,4 +26,4 @@ def get_media_type(message_media):
 
 def get_dc(client):
     """return id of current connected Data Center"""
-    return next(dc.id for dc in client.dc_options if dc.ip_address == client.session.server_address)
+    return next(dc.id for dc in client._dc_options if dc.ip_address == client.session.server_address)

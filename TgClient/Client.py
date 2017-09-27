@@ -57,9 +57,9 @@ class Client():
         self.get_updates()
         return True
 
-    def invoke(self, request, updates=None):
+    def invoke(self, request):
         try:
-            return self.client.invoke(request, updates)
+            return self.client.invoke(request)
             pyotherside.send('connection', True)
             self.connected = True
         except :
