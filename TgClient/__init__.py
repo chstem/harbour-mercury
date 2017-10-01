@@ -56,7 +56,7 @@ def connect():
     )
 
     pyotherside.send('log', ''.join(('Mercury Version: ', client.__version__)))
-    pyotherside.send('log', ''.join(('Telethon Client Version: ', client.client.__version__)))
+    pyotherside.send('log', ''.join(('Telethon Version: ', client.client.__version__)))
 
     if DC_IP:
         client.session.server_address = DC_IP

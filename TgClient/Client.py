@@ -40,23 +40,6 @@ class Client():
         #database.initialize('{}.db'.format(session_user_id))
         #database.initialize(':memory:')
 
-    def reconnect(self, new_dc=None):
-        try:
-            self.client.reconnect(new_dc)
-            self.connected = True
-        except OSError:
-            return False
-        pyotherside.send('connection', True)
-        if not self.client._update_handlers:
-            self.client.add_update_handler(self.update_handler)
-        try:
-            self.client._set_updates_thread(running=True)
-        except RuntimeError:
-            # still running
-            pass
-        self.get_updates()
-        return True
-
     def invoke(self, request):
         try:
             return self.client.invoke(request)
@@ -115,11 +98,10 @@ class Client():
         pyotherside.send('contacts_list', sorted(contacts_model, key=lambda u:u['name']))
 
     def request_dialogs(self):
-        if self.connected:
-            dialogs, entities = self.client.get_dialogs(limit=0)
-        elif self.reconnect():
-            dialogs, entities = self.client.get_dialogs(limit=0)
-        else:
+        try:
+            dialogs, entities = self.client.get_dialogs(limit=None)
+        except:
+            # disconnected; use cached data
             entities = database.get_dialogs()
 
         dialogs_model = []
@@ -257,7 +239,7 @@ class Client():
 
     def update_handler(self, update_object):
         """this function gets passed to client.add_update_handler()"""
-        if isinstance(update_object, tl.types.UpdatesTg):
+        if isinstance(update_object, tl.types.Updates):
             for update in update_object.updates:
                 self.handle_update(update, users=update_object.users, chats=update_object.chats)
             pts = max([getattr(u, 'pts', 0) for u in update_object.updates if not isinstance(u, tl.types.UpdateNewChannelMessage)], default=None)
@@ -295,7 +277,7 @@ class Client():
 
         elif isinstance(update_object, tl.types.UpdateNewChannelMessage):
             entity_id = update_object.message.to_id.channel_id
-            sender = utils.find_user_or_chat(update_object.message.from_id, users, chats)
+            sender = utils.find_user_or_chat(update_object.message.to_id.channel_id, users, chats)
             try:
                 database.add_messages(entity_id, [(update_object.message, sender),])
             except database.DialogDoesNotExist:
