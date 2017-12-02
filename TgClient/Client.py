@@ -30,7 +30,11 @@ class Client():
     __version__ = '0.1'
 
     def __init__(self, session_user_id, api_id, api_hash, settings, proxy=None):
-        self.client = TelegramClient(session_user_id, api_id, api_hash, proxy=proxy)
+        self.client = TelegramClient(
+            session_user_id, api_id, api_hash,
+            proxy = proxy,
+            update_workers = 1
+        )
         self.connected = False
         self.settings = settings
         self.filemanager = FileManager(self.client, settings)
@@ -100,6 +104,7 @@ class Client():
     def request_dialogs(self):
         try:
             dialogs, entities = self.client.get_dialogs(limit=None)
+            entities.reverse()
         except:
             # disconnected; use cached data
             entities = database.get_dialogs()
@@ -395,37 +400,11 @@ class Client():
             self.contacts[user.id] = contact, user
 
     def download_messages(self, entity, limit=20, offset_id=0, max_id=0, min_id=0):
-        """download messages from Telegram server"""
-        while 1:
-            result = self.invoke(tl.functions.messages.GetHistoryRequest(
-                utils.get_input_peer(entity),
-                limit=limit,
-                offset_date=None,
-                offset_id=offset_id,
-                max_id=max_id,
-                min_id=min_id,
-                add_offset=0,
-            ))
-
-            if not result:
-                return
-
-            # get sender (User) for each message
-            senders = [utils.find_user_or_chat(m.from_id, result.users, result.chats)
-                        if m.from_id is not None else
-                        utils.find_user_or_chat(m.to_id, result.users, result.chats)
-                        for m in result.messages]
-            messages = zip(result.messages, senders)
-
-            # add to cache
-            database.add_messages(entity.id, messages)
-
-            # check exit conditions
-            if limit or len(result.messages) == 0:
-                break
-            else:
-                # continue to check for more chunks
-                offset_id = result.messages[-1].id
+        """Download messages from Telegram server."""
+        res = self.client.get_message_history(entity, limit=limit, offset_id=offset_id, max_id=max_id, min_id=min_id)
+        total_messages, messages, senders = res
+        # add to cache
+        database.add_messages(entity.id, zip(messages, senders))
 
     def build_message_dict(self, msg, sender):
         mdata = {

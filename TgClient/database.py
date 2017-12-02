@@ -78,7 +78,7 @@ def get_meta(*keys):
 #############################
 
 def add_dialog(entity):
-    blob = entity.to_bytes()
+    blob = bytes(entity)
     with db.atomic() as txn:
         try:
             dialog = Dialog.get(id=entity.id)
@@ -105,7 +105,7 @@ def get_dialogs(limit=-1):
     return [from_bytes(d.blob) for d in dialogs[:limit]]
 
 def add_sender(sender):
-    blob = sender.to_bytes()
+    blob = bytes(sender)
     with db.atomic() as txn:
         try:
             s = Sender.get(id=sender.id)
@@ -155,7 +155,7 @@ def add_messages(dialog_id, messages):
             try:
                 s = Sender.get(id=sender.id)
             except Sender.DoesNotExist:
-                s = Sender.create(id=sender.id, blob=sender.to_bytes())
+                s = Sender.create(id=sender.id, blob=bytes(sender))
                 s.save()
             try:
                 m = Message.create(
@@ -163,7 +163,7 @@ def add_messages(dialog_id, messages):
                     date = message.date,
                     dialog = dialog,
                     sender = s,
-                    blob = message.to_bytes(),
+                    blob = bytes(message),
                 )
                 m.save()
             except IntegrityError:
@@ -183,7 +183,7 @@ def get_message_sender(message_id):
     return sender
 
 def update_message(message):
-    blob = message.to_bytes()
+    blob = bytes(message)
     with db.atomic() as txn:
         try:
             msg = Message.get(id=message.id)

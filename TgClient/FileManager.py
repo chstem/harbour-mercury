@@ -58,14 +58,8 @@ class FileManager:
         else:
             photo = chat.photo.photo_big
 
-        # check Data Center
-        if photo.dc_id != utils.get_dc(self.client):
-            client = self.client._get_exported_client(photo.dc_id)
-        else:
-            client = self.client
-
         # download file
-        client.download_file(
+        self.client.download_file(
             tl.types.InputFileLocation(
                 volume_id = photo.volume_id,
                 local_id = photo.local_id,
