@@ -8,11 +8,11 @@ Licensed under GNU GPLv3
 
 ### Prerequirements
 
-1. Telethon is not included (yet), so you need to [install](https://github.com/LonamiWebs/Telethon#installing-telethon) it on your Sailfish device:
+1. Telethon is not included (yet), so you need to [install](https://github.com/LonamiWebs/Telethon#installing-telethon) it on your Sailfish device. Telethon is under active development and occasionally breaks backward compatibility, so make sure to use the correct version:
 
 ```bash
 devel-su
-pip3 install telethon
+pip3 install telethon=0.15.5
 exit
 ```
 
@@ -57,13 +57,6 @@ sailfish-qml harbour-mercury
 ```bash
 devel-su
 pkcon install openssl
-```
-
-- As part of authentication with Telegram servers, the client needs to factorize some big number (presumably for bot protection). Although Telethon comes with some algorithm for this, it is not the most efficient one. If available, a faster [SymPy](http://www.sympy.org/en/index.html) routine will be used instead:
-
-```bash
-devel-su
-pip3 install sympy
 ```
 
 ### Why the Name?
